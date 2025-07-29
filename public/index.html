@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Camera Snapshot to Bot</title>
+</head>
+<body>
+  <h2>📸 کیمره فعاله کړه او عکس ولیږه</h2>
+  <video id="video" autoplay playsinline style="border:1px solid #ccc;"></video><br>
+  <button id="snap">عکس واخله</button>
+  <canvas id="canvas" style="display:none;"></canvas>
+
+  <script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const snap = document.getElementById('snap');
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get('uid');
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(_ => alert("❌ کیمرې اجازه مه‌شوه"));
+
+    snap.onclick = async () => {
+      if (!uid) {
+        alert("❌ UID ندی میسر!");
+        return;
+      }
+      const ctx = canvas.getContext('2d');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+
+      const imageData = canvas.toDataURL('image/png');
+      await fetch('/api/upload', {
+        method: 'POST',
+        body: JSON.stringify({ image: imageData, uid }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      alert("✅ عکس مو بوت ته واستول شو");
+    };
+  </script>
+</body>
+</html> 
