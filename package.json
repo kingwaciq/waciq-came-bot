@@ -1,0 +1,8 @@
+{
+  "name": "waciq-camera-vault",
+  "version": "1.0.0",
+  "main": "api/upload.js",
+  "dependencies": {
+    "telegraf": "^4.12.2"
+  }
+} 
