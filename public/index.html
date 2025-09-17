@@ -1,32 +1,66 @@
 <!DOCTYPE html>
-<html lang="ps">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KING WACIQ — Fullscreen Video</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background: #000;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KING WACIQ — Fullscreen Video + Animated Text</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Arial', sans-serif;
+  }
+
+  /* Fullscreen video */
+  video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  /* Animated text */
+  .animated-text {
+    position: absolute;
+    top: 100%;
+    left: -50%;
+    color: red;
+    font-size: 5vw;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 1;
+    animation: moveText 15s linear infinite;
+  }
+
+  /* Text animation: move diagonally up-right */
+  @keyframes moveText {
+    0% {
+      top: 100%;
+      left: -50%;
     }
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    100% {
+      top: -20%;
+      left: 100%;
     }
-  </style>
+  }
+
+</style>
 </head>
 <body>
-  <video autoplay playsinline loop>
-    <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
-    ستاسو براوزر د ویدیو ټګ ملاتړ نه کوي.
-  </video>
+
+<video autoplay playsinline loop>
+  <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+<div class="animated-text">FREE PALESTINE</div>
+
 </body>
 </html> 
