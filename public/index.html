@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KING WACIQ — Animated Video + Text</title>
+<title>FREE PALESTINE Video Overlay</title>
 <style>
   html, body {
     margin: 0;
@@ -15,7 +15,6 @@
     font-family: 'Arial', sans-serif;
   }
 
-  /* Fullscreen video */
   video {
     position: fixed;
     top: 0;
@@ -26,42 +25,23 @@
     z-index: 0;
   }
 
-  /* Animated text */
-  .animated-text {
+  .text-layer {
     position: absolute;
     color: red;
-    font-size: 5vw;
     font-weight: bold;
     white-space: nowrap;
     z-index: 1;
-    animation: moveText 15s linear infinite, sway 3s ease-in-out infinite alternate;
+    animation: floatUp 10s linear infinite;
   }
 
-  /* Text animation: diagonal up-right */
-  @keyframes moveText {
-    0% {
-      top: 100%;
-      left: -50%;
-    }
-    100% {
-      top: -20%;
-      left: 100%;
-    }
+  .text1 { font-size: 6vw; top: 50%; left: 20%; animation-delay: 0s; }
+  .text2 { font-size: 5vw; top: 55%; left: 30%; animation-delay: 2s; }
+  .text3 { font-size: 4vw; top: 60%; left: 25%; animation-delay: 4s; }
+
+  @keyframes floatUp {
+    0% { transform: translateY(0px); opacity: 1; }
+    100% { transform: translateY(-150px); opacity: 0.8; }
   }
-
-  /* Oscillating left-right movement */
-  @keyframes sway {
-    0% { transform: translateX(0); }
-    50% { transform: translateX(20px); }
-    100% { transform: translateX(0); }
-  }
-
-  /* Multiple text copies with slight delays */
-  .text1 { animation-delay: 0s, 0s; top: 100%; left: -50%; font-size: 5vw; }
-  .text2 { animation-delay: 3s, 1s; top: 120%; left: -60%; font-size: 6vw; }
-  .text3 { animation-delay: 6s, 2s; top: 140%; left: -70%; font-size: 4vw; }
-  .text4 { animation-delay: 9s, 0.5s; top: 160%; left: -80%; font-size: 5.5vw; }
-
 </style>
 </head>
 <body>
@@ -71,10 +51,9 @@
   Your browser does not support the video tag.
 </video>
 
-<div class="animated-text text1">FREE PALESTINE</div>
-<div class="animated-text text2">FREE PALESTINE</div>
-<div class="animated-text text3">FREE PALESTINE</div>
-<div class="animated-text text4">FREE PALESTINE</div>
+<div class="text-layer text1">FREE PALESTINE</div>
+<div class="text-layer text2">FREE PALESTINE</div>
+<div class="text-layer text3">FREE PALESTINE</div>
 
 </body>
 </html> 
