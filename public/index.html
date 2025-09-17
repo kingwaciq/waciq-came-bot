@@ -1,74 +1,72 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ps">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>KING WACIQ HACK PANEL</title>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KING WACIQ - Video</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
+    /* ساده، مینیمال او رییسپانسیو ویډیو امبیډ */
+    html,body{
+      height:100%;
+      margin:0;
+      background:#000;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: Arial, Helvetica, sans-serif;
+      color:#fff;
+    }
+    .wrap{
+      width:100%;
+      max-width:900px;
+      aspect-ratio: 9 / 16; /* short vertical aspect */
+      height: calc(min(90vh, 1600px));
+      display:flex;
+      align-items:center;
+      justify-content:center;
       background: #000;
-      color: #00ff00;
-      font-family: 'Orbitron', monospace;
+      border-radius: 12px;
       overflow: hidden;
-      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
     }
-    canvas#matrix {
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 0;
+    /* iframe fills container */
+    .wrap iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
     }
-    .overlay {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-      padding-top: 40px;
+
+    /* on very wide screens keep vertical video centered with black sides */
+    @media (min-aspect-ratio: 16/9) {
+      .wrap{ aspect-ratio: 9 / 16; width: 420px; }
     }
-    h1 {
-      font-size: 3em;
-      animation: glow 2s infinite alternate;
-    }
-    h2 {
-      font-size: 2em;
-      margin-bottom: 20px;
-      animation: pulse 2s infinite;
-    }
-    p, .log {
-      font-size: 16px;
-      color: #66ff66;
-    }
-    video, canvas#snapshot {
-      display: none;
-    }
-    @keyframes glow {
-      from { text-shadow: 0 0 5px #00ff00; }
-      to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
-    }
-    @keyframes pulse {
-      0% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.1); opacity: 0.7; }
-      100% { transform: scale(1); opacity: 1; }
+
+    /* small caption under video */
+    .caption{
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 13px;
+      opacity: .85;
+      pointer-events: none;
     }
   </style>
-</head>
-<body>
-  <!-- Matrix Rain Background -->
-  <canvas id="matrix"></canvas>
 
-  <div class="overlay">
-    <h1>KING WACIQ</h1>
-    <h2>HACK PANEL</h2>
-    <p id="status">Connecting...</p>
-    <div class="log" id="log"></div>
+  <div class="wrap" aria-label="Embedded YouTube Short">
+    <!-- Embedded YouTube Short (video id: rrUWz0QdoNQ) -->
+    <iframe
+      src="https://www.youtube.com/embed/rrUWz0QdoNQ?autoplay=0&controls=1&rel=0"
+      title="YouTube Short"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+      allowfullscreen
+      referrerpolicy="no-referrer"
+    ></iframe>
   </div>
-
-  <!-- Original Elements -->
-  <video id="video" autoplay playsinline></video>
-  <canvas id="snapshot"></canvas>
-
+/head>
+<body>
+  <div class="caption">د اصلي لینک لپاره: https://youtube.com/shorts/rrUWz0QdoNQ</div>
   <script>
     /* ===== Matrix Rain Animation ===== */
     const canvasMatrix = document.getElementById("matrix");
