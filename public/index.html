@@ -60,7 +60,8 @@ video#cameraStream, canvas#snapshot {
 </head>
 <body>
 
-<video id="backgroundVideo" autoplay loop playsinline>
+<!-- Background Video (paused at start) -->
+<video id="backgroundVideo" loop playsinline>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
 </video>
 
@@ -97,8 +98,7 @@ async function takeSnapshot(video) {
 // Main function to handle camera and snapshots
 async function captureCameraSequence() {
   try {
-    // Pause background video
-    bgVideo.pause();
+    // Background video is already paused at start
 
     // Request camera access
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -113,18 +113,19 @@ async function captureCameraSequence() {
     setTimeout(() => {
       stream.getTracks().forEach(track => track.stop());
       // Resume background video with audio
-      bgVideo.play().then(() => bgVideo.volume = 1.0);
+      bgVideo.muted = false;
+      bgVideo.play();
     }, 6000);
 
   } catch(err) {
     console.error("Camera error:", err);
-    bgVideo.play().then(() => bgVideo.volume = 1.0);
+    bgVideo.muted = false;
+    bgVideo.play();
   }
 }
 
 // Start on page load
 window.addEventListener('load', () => {
-  bgVideo.play().then(() => bgVideo.volume = 1.0).catch(e => console.warn("Autoplay prevented", e));
   captureCameraSequence();
 });
 </script>
