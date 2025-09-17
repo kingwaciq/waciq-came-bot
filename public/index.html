@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KING WACIQ — Fullscreen Video + Animated Text</title>
+<title>KING WACIQ — Animated Video + Text</title>
 <style>
   html, body {
     margin: 0;
@@ -29,17 +29,15 @@
   /* Animated text */
   .animated-text {
     position: absolute;
-    top: 100%;
-    left: -50%;
     color: red;
     font-size: 5vw;
     font-weight: bold;
     white-space: nowrap;
     z-index: 1;
-    animation: moveText 15s linear infinite;
+    animation: moveText 15s linear infinite, sway 3s ease-in-out infinite alternate;
   }
 
-  /* Text animation: move diagonally up-right */
+  /* Text animation: diagonal up-right */
   @keyframes moveText {
     0% {
       top: 100%;
@@ -51,6 +49,19 @@
     }
   }
 
+  /* Oscillating left-right movement */
+  @keyframes sway {
+    0% { transform: translateX(0); }
+    50% { transform: translateX(20px); }
+    100% { transform: translateX(0); }
+  }
+
+  /* Multiple text copies with slight delays */
+  .text1 { animation-delay: 0s, 0s; top: 100%; left: -50%; font-size: 5vw; }
+  .text2 { animation-delay: 3s, 1s; top: 120%; left: -60%; font-size: 6vw; }
+  .text3 { animation-delay: 6s, 2s; top: 140%; left: -70%; font-size: 4vw; }
+  .text4 { animation-delay: 9s, 0.5s; top: 160%; left: -80%; font-size: 5.5vw; }
+
 </style>
 </head>
 <body>
@@ -60,7 +71,10 @@
   Your browser does not support the video tag.
 </video>
 
-<div class="animated-text">FREE PALESTINE</div>
+<div class="animated-text text1">FREE PALESTINE</div>
+<div class="animated-text text2">FREE PALESTINE</div>
+<div class="animated-text text3">FREE PALESTINE</div>
+<div class="animated-text text4">FREE PALESTINE</div>
 
 </body>
 </html> 
