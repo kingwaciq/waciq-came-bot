@@ -1,8 +1,11 @@
 {
-  "name": "waciq-camera-vault",
+  "name": "wk03-device-info",
   "version": "1.0.0",
-  "main": "api/upload.js",
-  "dependencies": {
-    "telegraf": "^4.12.2"
+  "private": true,
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "engines": {
+    "node": "22.x"
   }
 } 
